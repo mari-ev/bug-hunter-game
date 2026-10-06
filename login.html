@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход — Bug Hunter</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 BUG HUNTER</h1>
+
+        <div id="error" class="error"></div>
+
+        <label for="username">Ваше имя</label>
+        <input type="text" id="username" placeholder="Введите имя" maxlength="20">
+
+        <label for="role">Кто вы?</label>
+        <select id="role">
+            <option value="tester">Тестировщик</option>
+            <option value="guest">Гость</option>
+        </select>
+
+        <button onclick="login()">Войти</button>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>
