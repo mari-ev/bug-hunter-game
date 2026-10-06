@@ -20,7 +20,27 @@ function login() {
     localStorage.setItem('role', role);
     localStorage.setItem('loginTime', new Date().toISOString());
 
-    // Переходим на главную (пока заглушка — потом создадим index.html)
+    // Убираем ошибку
+    errorDiv.textContent = '';
+
+    // Показываем приветствие
     alert(`Добро пожаловать, ${username}! Роль: ${role}`);
-    // window.location.href = 'index.html';  // раскомментируем, когда создадим главную
+
+    // window.location.href = 'index.html'; // раскомментируем, когда создадим главную
+}
+
+function clearForm() {
+    // Очищаем поле имени
+    document.getElementById('username').value = '';
+
+    // Сбрасываем выбор роли на "Тестировщик"
+    document.getElementById('role').value = 'tester';
+
+    // Очищаем ошибку
+    document.getElementById('error').textContent = '';
+
+    // Очищаем localStorage (чтобы данные не подставлялись при следующем входе)
+    localStorage.removeItem('username');
+    localStorage.removeItem('role');
+    localStorage.removeItem('loginTime');
 }
