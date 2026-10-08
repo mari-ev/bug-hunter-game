@@ -3,6 +3,10 @@ const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const restartBtn = document.getElementById('restart');
 
+// ===== ЗАГРУЗКА СПРАЙТА ПЕРСОНАЖА =====
+const playerImg = new Image();
+playerImg.src = 'assets/player.png';
+
 // ===== РАЗМЕРЫ =====
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -17,12 +21,12 @@ const WORLD = {
 // ===== КАМЕРА =====
 const camera = { x: 0, y: 0 };
 
-// ===== ПЕРСОНАЖ (старт — левый нижний угол) =====
+// ===== ПЕРСОНАЖ =====
 const player = {
     x: 200,
     y: WORLD.height - 300,
-    width: 48,
-    height: 80,
+    width: 64,
+    height: 128,
     speed: 5,
     targetX: 200,
     targetY: WORLD.height - 300,
@@ -166,10 +170,10 @@ function update() {
         const moveX = (dx / dist) * player.speed;
         const moveY = (dy / dist) * player.speed;
 
-        if (canMove(player.x + moveX, player.y, player.width, player.height)) {
+        if (canMove(player.x + moveX, player.y, player.width / 2, player.height / 2)) {
             player.x += moveX;
         }
-        if (canMove(player.x, player.y + moveY, player.width, player.height)) {
+        if (canMove(player.x, player.y + moveY, player.width / 2, player.height / 2)) {
             player.y += moveY;
         }
     }
@@ -229,7 +233,7 @@ function draw() {
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
 
-    // ===== ПОЛ С НАКЛОНОМ =====
+    // Пол
     const horizonY = camera.y - 800;
     const floorBottom = camera.y + canvas.height + 300;
     const vanishingX = camera.x + canvas.width / 2;
@@ -243,7 +247,6 @@ function draw() {
     ctx.closePath();
     ctx.fill();
 
-    // Тайлы пола
     const tile = WORLD.tileSize;
     const startX = Math.floor(camera.x / tile) * tile - tile * 2;
     const endX = camera.x + canvas.width + tile * 2;
@@ -254,14 +257,13 @@ function draw() {
         for (let y = startY; y < endY; y += tile) {
             const screenX = x;
             const screenY = y + (y - camera.y) * 0.4;
-
             ctx.strokeStyle = '#252525';
             ctx.lineWidth = 2;
             ctx.strokeRect(screenX, screenY, tile, tile * 0.5);
         }
     }
 
-    // ===== СОРТИРОВКА ОБЪЕКТОВ =====
+    // Сортировка объектов
     const allObjects = [
         ...walls.map(w => ({ type: 'wall', y: w.y + w.size, data: w })),
         ...bugs.filter(b => b.alive).map(b => ({ type: 'bug', y: b.y + b.height / 2, data: b })),
@@ -286,22 +288,14 @@ function draw() {
         ctx.shadowBlur = 0;
     });
 
-    // Индикатор цели
-    ctx.strokeStyle = 'rgba(126, 231, 135, 0.4)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(player.targetX, player.targetY, 10, 0, Math.PI * 2);
-    ctx.stroke();
-
     ctx.restore();
 }
 
-// ===== СТЕНА (тень справа-внизу) =====
+// ===== СТЕНА =====
 function drawWall(wall) {
     const size = wall.size;
     const depth = 24;
 
-    // Тень на полу (справа-внизу от стены)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
     ctx.beginPath();
     ctx.moveTo(wall.x + size, wall.y + size);
@@ -311,21 +305,18 @@ function drawWall(wall) {
     ctx.closePath();
     ctx.fill();
 
-    // Верхняя грань (крыша)
     ctx.fillStyle = '#4a4a4a';
     ctx.fillRect(wall.x, wall.y - depth, size, depth);
 
-    // Передняя грань
     ctx.fillStyle = '#333';
     ctx.fillRect(wall.x, wall.y - depth, size, size);
 
-    // Обводка
     ctx.strokeStyle = '#555';
     ctx.lineWidth = 2;
     ctx.strokeRect(wall.x, wall.y - depth, size, size);
 }
 
-// ===== ЖУК (тень справа-внизу) =====
+// ===== ЖУК =====
 function drawBug(bug) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
     ctx.beginPath();
@@ -338,18 +329,28 @@ function drawBug(bug) {
     ctx.fill();
 }
 
-// ===== ПЕРСОНАЖ (тень справа-внизу) =====
+// ===== ПЕРСОНАЖ (СПРАЙТ) =====
 function drawPlayer(p) {
+    // Тень
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
-    ctx.ellipse(p.x + 10, p.y + p.height / 2 + 10, p.width / 2, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.x + 10, p.y + p.height / 2 + 10, p.width / 3, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x - p.width / 2, p.y - p.height / 2, p.width, p.height);
-
-    ctx.fillStyle = '#0d0d0d';
-    ctx.fillRect(p.x - p.width / 4, p.y - p.height / 3, 6, 6);
+    // Спрайт персонажа
+    if (playerImg.complete && playerImg.naturalWidth > 0) {
+        ctx.drawImage(
+            playerImg,
+            p.x - p.width / 2,
+            p.y - p.height / 2,
+            p.width,
+            p.height
+        );
+    } else {
+        // Заглушка, пока спрайт не загрузился
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - p.width / 2, p.y - p.height / 2, p.width, p.height);
+    }
 }
 
 // ===== ЦИКЛ =====
