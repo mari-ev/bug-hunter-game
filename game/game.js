@@ -111,6 +111,9 @@ function buildMap() {
         player.targetX = player.x;
         player.targetY = player.y;
     }
+
+    console.log('Карта построена. Жуков:', bugs.length);
+    bugs.forEach((b, i) => console.log(`Жук ${i}:`, b.x, b.y));
 }
 
 // ===== КОЛЛИЗИИ =====
@@ -131,27 +134,29 @@ function canMove(x, y, width, height) {
            !isWall(x + half, y + half);
 }
 
-// ===== УПРАВЛЕНИЕ (ИСПРАВЛЕНО) =====
+// ===== УПРАВЛЕНИЕ (С ЛОГАМИ) =====
 function handleTap(screenX, screenY) {
     const worldX = screenX + camera.x;
     const worldY = screenY + camera.y;
 
-    let hitBug = false;
+    console.log('--- ТАП ---');
+    console.log('Экран:', screenX, screenY);
+    console.log('Камера:', camera.x, camera.y);
+    console.log('Мир:', worldX, worldY);
+    console.log('Жуков:', bugs.length);
 
-    // Ищем ближайшего жука в радиусе тапа
+    let hitBug = false;
     let closestBug = null;
     let closestDist = Infinity;
 
     for (const bug of bugs) {
         if (!bug.alive) continue;
-
         const distToBug = Math.sqrt(
             (worldX - bug.x) ** 2 + (worldY - bug.y) ** 2
         );
+        console.log(`Жук (${bug.x}, ${bug.y}) — расстояние: ${distToBug.toFixed(1)}`);
 
-        // Радиус попадания: половина размера жука + запас 50 пикселей
         const hitRadius = Math.max(bug.width, bug.height) / 2 + 50;
-
         if (distToBug < hitRadius && distToBug < closestDist) {
             closestBug = bug;
             closestDist = distToBug;
@@ -159,11 +164,13 @@ function handleTap(screenX, screenY) {
     }
 
     if (closestBug) {
+        console.log('ПОПАЛ! Стреляем в', closestBug.x, closestBug.y);
         shootAt(closestBug.x, closestBug.y);
         hitBug = true;
     }
 
     if (!hitBug) {
+        console.log('НЕ ПОПАЛ — идём в', worldX, worldY);
         player.targetX = worldX;
         player.targetY = worldY;
     }
@@ -241,7 +248,6 @@ function update() {
         }
     });
 
-    // Проверка попаданий пуль в жуков
     bullets.forEach((bullet, bIndex) => {
         bugs.forEach((bug) => {
             if (!bug.alive) return;
@@ -314,13 +320,10 @@ function draw() {
 // ===== СТЕНА =====
 function drawWall(wall) {
     const depth = 24;
-
     ctx.fillStyle = '#3a3a3a';
     ctx.fillRect(wall.x, wall.y - depth, wall.size, depth);
-
     ctx.fillStyle = '#2a2a2a';
     ctx.fillRect(wall.x, wall.y - depth, wall.size, wall.size);
-
     ctx.strokeStyle = '#444';
     ctx.lineWidth = 2;
     ctx.strokeRect(wall.x, wall.y - depth, wall.size, wall.size);
@@ -329,13 +332,10 @@ function drawWall(wall) {
 // ===== ДВЕРЬ =====
 function drawDoor(door) {
     const depth = 24;
-
     ctx.fillStyle = '#5a4a2a';
     ctx.fillRect(door.x, door.y - depth, door.size, depth);
-
     ctx.fillStyle = '#4a3a1a';
     ctx.fillRect(door.x, door.y - depth, door.size, door.size);
-
     ctx.strokeStyle = '#6a5a3a';
     ctx.lineWidth = 2;
     ctx.strokeRect(door.x, door.y - depth, door.size, door.size);
