@@ -48,13 +48,13 @@ const camera = { x: 0, y: 0 };
 const walls = [];
 const doors = [];
 
-// ===== ПЕРСОНАЖ (скорость выше) =====
+// ===== ПЕРСОНАЖ =====
 const player = {
     x: 200,
     y: 200,
     width: 96,
     height: 96,
-    speed: 8,          // ← было 4, стало 8
+    speed: 8,
     targetX: 200,
     targetY: 200
 };
@@ -131,22 +131,36 @@ function canMove(x, y, width, height) {
            !isWall(x + half, y + half);
 }
 
-// ===== УПРАВЛЕНИЕ =====
+// ===== УПРАВЛЕНИЕ (ИСПРАВЛЕНО) =====
 function handleTap(screenX, screenY) {
     const worldX = screenX + camera.x;
     const worldY = screenY + camera.y;
 
-    // Проверка: попал ли тап по жуку
     let hitBug = false;
+
+    // Ищем ближайшего жука в радиусе тапа
+    let closestBug = null;
+    let closestDist = Infinity;
+
     for (const bug of bugs) {
         if (!bug.alive) continue;
-        const dx = (worldX - bug.x) / (bug.width);
-        const dy = (worldY - bug.y) / (bug.height);
-        if (dx * dx + dy * dy < 1) {
-            shootAt(bug.x, bug.y);
-            hitBug = true;
-            break;
+
+        const distToBug = Math.sqrt(
+            (worldX - bug.x) ** 2 + (worldY - bug.y) ** 2
+        );
+
+        // Радиус попадания: половина размера жука + запас 50 пикселей
+        const hitRadius = Math.max(bug.width, bug.height) / 2 + 50;
+
+        if (distToBug < hitRadius && distToBug < closestDist) {
+            closestBug = bug;
+            closestDist = distToBug;
         }
+    }
+
+    if (closestBug) {
+        shootAt(closestBug.x, closestBug.y);
+        hitBug = true;
     }
 
     if (!hitBug) {
@@ -227,7 +241,7 @@ function update() {
         }
     });
 
-    // Проверка попаданий
+    // Проверка попаданий пуль в жуков
     bullets.forEach((bullet, bIndex) => {
         bugs.forEach((bug) => {
             if (!bug.alive) return;
@@ -267,7 +281,7 @@ function draw() {
         }
     }
 
-    // Объекты (сортировка)
+    // Объекты
     const allObjects = [
         ...walls.map(w => ({ type: 'wall', y: w.y + w.size, data: w })),
         ...doors.map(d => ({ type: 'door', y: d.y + d.size, data: d })),
