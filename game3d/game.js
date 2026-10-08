@@ -59,7 +59,7 @@ const playerTexture = new THREE.TextureLoader().load('assets/player.png');
 playerTexture.magFilter = THREE.NearestFilter;
 playerTexture.minFilter = THREE.NearestFilter;
 
-const playerGeometry = new THREE.PlaneGeometry(1.5, 1.5);
+const playerGeometry = new THREE.PlaneGeometry(2.5, 2.5);
 const playerMaterial = new THREE.MeshBasicMaterial({
     map: playerTexture,
     transparent: true,
@@ -67,7 +67,7 @@ const playerMaterial = new THREE.MeshBasicMaterial({
     side: THREE.DoubleSide
 });
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
-player.position.set(0, 1, 0);
+player.position.set(0, 1.25, 0);
 scene.add(player);
 
 // ===== ЖУКИ =====
