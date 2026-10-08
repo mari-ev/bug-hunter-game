@@ -5,7 +5,7 @@ const restartBtn = document.getElementById('restart');
 
 // ===== ЗАГРУЗКА СПРАЙТА ПЕРСОНАЖА =====
 const playerImg = new Image();
-playerImg.src = 'assets/player.png';
+playerImg.src = 'assets/player.png?v=2';
 
 // ===== РАЗМЕРЫ =====
 canvas.width = window.innerWidth;
