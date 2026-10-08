@@ -3,93 +3,115 @@ const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const restartBtn = document.getElementById('restart');
 
-// ===== ЗАГРУЗКА СПРАЙТА ПЕРСОНАЖА =====
+// ===== СПРАЙТ =====
 const playerImg = new Image();
-playerImg.src = 'assets/player.png?v=2';
+playerImg.src = 'assets/player.png';
 
 // ===== РАЗМЕРЫ =====
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// ===== ТАЙЛ =====
+const TILE = 96;
+
+// ===== КАРТА (текстом) =====
+const MAP = [
+    "####################",
+    "#..................#",
+    "#..B....#....B.....#",
+    "#.......#..........#",
+    "#.......D..........#",
+    "#.......#..........#",
+    "#########..........#",
+    "#..................#",
+    "#....B.............#",
+    "#..................#",
+    "#..................#",
+    "######D#############",
+    "#..................#",
+    "#..................#",
+    "#.......B..........#",
+    "#..................#",
+    "####################"
+];
+
 // ===== МИР =====
 const WORLD = {
-    width: 3000,
-    height: 2000,
-    tileSize: 96
+    width: MAP[0].length * TILE,
+    height: MAP.length * TILE
 };
 
 // ===== КАМЕРА =====
 const camera = { x: 0, y: 0 };
 
+// ===== СТЕНЫ, ДВЕРИ =====
+const walls = [];
+const doors = [];
+
 // ===== ПЕРСОНАЖ =====
 const player = {
     x: 200,
-    y: WORLD.height - 300,
-    width: 64,
-    height: 128,
-    speed: 5,
+    y: 200,
+    width: 96,
+    height: 96,
+    speed: 4,
     targetX: 200,
-    targetY: WORLD.height - 300,
-    color: '#7ee787'
+    targetY: 200
 };
-
-// ===== СТЕНЫ =====
-const walls = [];
-
-function generateWalls() {
-    walls.length = 0;
-    const tile = WORLD.tileSize;
-    const cols = Math.floor(WORLD.width / tile);
-    const rows = Math.floor(WORLD.height / tile);
-
-    for (let x = 0; x < cols; x++) {
-        for (let y = 0; y < rows; y++) {
-            if (x === 0 || y === 0 || x === cols - 1 || y === rows - 1) {
-                walls.push({ x: x * tile, y: y * tile, size: tile });
-                continue;
-            }
-            if (Math.random() < 0.25) {
-                walls.push({ x: x * tile, y: y * tile, size: tile });
-            }
-        }
-    }
-
-    for (let i = walls.length - 1; i >= 0; i--) {
-        const w = walls[i];
-        const dist = Math.sqrt((w.x - player.x) ** 2 + (w.y - player.y) ** 2);
-        if (dist < 300) walls.splice(i, 1);
-    }
-}
 
 // ===== ЖУКИ =====
 const bugs = [];
-
-function spawnBug() {
-    let x, y, tries = 0;
-    do {
-        x = Math.random() * (WORLD.width - 200) + 100;
-        y = Math.random() * (WORLD.height - 200) + 100;
-        tries++;
-    } while (isWall(x, y) && tries < 50);
-
-    bugs.push({
-        x, y,
-        width: 40,
-        height: 24,
-        dx: (Math.random() - 0.5) * 2,
-        dy: (Math.random() - 0.5) * 2,
-        color: '#ff6b6b',
-        alive: true
-    });
-}
-
-for (let i = 0; i < 10; i++) spawnBug();
 
 // ===== ПУЛИ =====
 const bullets = [];
 
 // ===== СЧЁТ =====
 let score = 0;
+
+// ===== ПОСТРОЙКА КАРТЫ =====
+function buildMap() {
+    walls.length = 0;
+    doors.length = 0;
+    bugs.length = 0;
+
+    for (let row = 0; row < MAP.length; row++) {
+        for (let col = 0; col < MAP[row].length; col++) {
+            const char = MAP[row][col];
+            const x = col * TILE;
+            const y = row * TILE;
+
+            if (char === '#') {
+                walls.push({ x, y, size: TILE });
+            } else if (char === 'D') {
+                doors.push({ x, y, size: TILE });
+            } else if (char === 'P') {
+                player.x = x + TILE / 2;
+                player.y = y + TILE / 2;
+                player.targetX = player.x;
+                player.targetY = player.y;
+            } else if (char === 'B') {
+                bugs.push({
+                    x: x + TILE / 2,
+                    y: y + TILE / 2,
+                    width: 40,
+                    height: 24,
+                    dx: (Math.random() - 0.5) * 2,
+                    dy: (Math.random() - 0.5) * 2,
+                    color: '#ff6b6b',
+                    alive: true
+                });
+            }
+        }
+    }
+
+    // Если в карте не было 'P' — ставим в первой комнате
+    if (player.x === 200 && player.y === 200) {
+        player.x = TILE * 1.5;
+        player.y = TILE * 1.5;
+        player.targetX = player.x;
+        player.targetY = player.y;
+    }
+}
 
 // ===== КОЛЛИЗИИ =====
 function isWall(x, y) {
@@ -102,12 +124,11 @@ function isWall(x, y) {
 }
 
 function canMove(x, y, width, height) {
-    const halfW = width / 2;
-    const halfH = height / 2;
-    return !isWall(x - halfW, y - halfH) &&
-           !isWall(x + halfW, y - halfH) &&
-           !isWall(x - halfW, y + halfH) &&
-           !isWall(x + halfW, y + halfH);
+    const half = width / 2;
+    return !isWall(x - half, y - half) &&
+           !isWall(x + half, y - half) &&
+           !isWall(x - half, y + half) &&
+           !isWall(x + half, y + half);
 }
 
 // ===== УПРАВЛЕНИЕ =====
@@ -216,13 +237,6 @@ function update() {
             }
         });
     });
-
-    for (let i = bugs.length - 1; i >= 0; i--) {
-        if (!bugs[i].alive) {
-            bugs.splice(i, 1);
-            spawnBug();
-        }
-    }
 }
 
 // ===== ОТРИСОВКА =====
@@ -233,45 +247,35 @@ function draw() {
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
 
-    // Пол
-    const horizonY = camera.y - 800;
-    const floorBottom = camera.y + canvas.height + 300;
-    const vanishingX = camera.x + canvas.width / 2;
-    const vanishingY = horizonY;
+    // ===== ПОЛ =====
+    for (let row = 0; row < MAP.length; row++) {
+        for (let col = 0; col < MAP[row].length; col++) {
+            const char = MAP[row][col];
+            const x = col * TILE;
+            const y = row * TILE;
 
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.moveTo(camera.x - 800, floorBottom);
-    ctx.lineTo(camera.x + canvas.width + 800, floorBottom);
-    ctx.lineTo(vanishingX, vanishingY);
-    ctx.closePath();
-    ctx.fill();
-
-    const tile = WORLD.tileSize;
-    const startX = Math.floor(camera.x / tile) * tile - tile * 2;
-    const endX = camera.x + canvas.width + tile * 2;
-    const startY = Math.floor(camera.y / tile) * tile - tile * 2;
-    const endY = camera.y + canvas.height + tile * 2;
-
-    for (let x = startX; x < endX; x += tile) {
-        for (let y = startY; y < endY; y += tile) {
-            const screenX = x;
-            const screenY = y + (y - camera.y) * 0.4;
-            ctx.strokeStyle = '#252525';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(screenX, screenY, tile, tile * 0.5);
+            if (char !== '#') {
+                // Пол
+                ctx.fillStyle = '#1a1a1a';
+                ctx.fillRect(x, y, TILE, TILE);
+                ctx.strokeStyle = '#252525';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, TILE, TILE);
+            }
         }
     }
 
-    // Сортировка объектов
+    // ===== ОБЪЕКТЫ (сортировка) =====
     const allObjects = [
         ...walls.map(w => ({ type: 'wall', y: w.y + w.size, data: w })),
+        ...doors.map(d => ({ type: 'door', y: d.y + d.size, data: d })),
         ...bugs.filter(b => b.alive).map(b => ({ type: 'bug', y: b.y + b.height / 2, data: b })),
         { type: 'player', y: player.y + player.height / 2, data: player }
     ].sort((a, b) => a.y - b.y);
 
     allObjects.forEach(obj => {
         if (obj.type === 'wall') drawWall(obj.data);
+        else if (obj.type === 'door') drawDoor(obj.data);
         else if (obj.type === 'bug') drawBug(obj.data);
         else if (obj.type === 'player') drawPlayer(obj.data);
     });
@@ -293,27 +297,32 @@ function draw() {
 
 // ===== СТЕНА =====
 function drawWall(wall) {
-    const size = wall.size;
     const depth = 24;
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.beginPath();
-    ctx.moveTo(wall.x + size, wall.y + size);
-    ctx.lineTo(wall.x + size + 20, wall.y + size);
-    ctx.lineTo(wall.x + size + 20, wall.y + size + 10);
-    ctx.lineTo(wall.x + size, wall.y + size + 10);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillStyle = '#3a3a3a';
+    ctx.fillRect(wall.x, wall.y - depth, wall.size, depth);
 
-    ctx.fillStyle = '#4a4a4a';
-    ctx.fillRect(wall.x, wall.y - depth, size, depth);
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(wall.x, wall.y - depth, wall.size, wall.size);
 
-    ctx.fillStyle = '#333';
-    ctx.fillRect(wall.x, wall.y - depth, size, size);
-
-    ctx.strokeStyle = '#555';
+    ctx.strokeStyle = '#444';
     ctx.lineWidth = 2;
-    ctx.strokeRect(wall.x, wall.y - depth, size, size);
+    ctx.strokeRect(wall.x, wall.y - depth, wall.size, wall.size);
+}
+
+// ===== ДВЕРЬ =====
+function drawDoor(door) {
+    const depth = 24;
+
+    ctx.fillStyle = '#5a4a2a';
+    ctx.fillRect(door.x, door.y - depth, door.size, depth);
+
+    ctx.fillStyle = '#4a3a1a';
+    ctx.fillRect(door.x, door.y - depth, door.size, door.size);
+
+    ctx.strokeStyle = '#6a5a3a';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(door.x, door.y - depth, door.size, door.size);
 }
 
 // ===== ЖУК =====
@@ -329,26 +338,17 @@ function drawBug(bug) {
     ctx.fill();
 }
 
-// ===== ПЕРСОНАЖ (СПРАЙТ) =====
+// ===== ПЕРСОНАЖ =====
 function drawPlayer(p) {
-    // Тень
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
     ctx.ellipse(p.x + 10, p.y + p.height / 2 + 10, p.width / 3, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Спрайт персонажа
     if (playerImg.complete && playerImg.naturalWidth > 0) {
-        ctx.drawImage(
-            playerImg,
-            p.x - p.width / 2,
-            p.y - p.height / 2,
-            p.width,
-            p.height
-        );
+        ctx.drawImage(playerImg, p.x - p.width / 2, p.y - p.height / 2, p.width, p.height);
     } else {
-        // Заглушка, пока спрайт не загрузился
-        ctx.fillStyle = p.color;
+        ctx.fillStyle = '#7ee787';
         ctx.fillRect(p.x - p.width / 2, p.y - p.height / 2, p.width, p.height);
     }
 }
@@ -364,14 +364,8 @@ function loop() {
 restartBtn.addEventListener('click', () => {
     score = 0;
     scoreEl.textContent = 0;
-    bugs.length = 0;
     bullets.length = 0;
-    player.x = 200;
-    player.y = WORLD.height - 300;
-    player.targetX = 200;
-    player.targetY = WORLD.height - 300;
-    generateWalls();
-    for (let i = 0; i < 10; i++) spawnBug();
+    buildMap();
 });
 
 // ===== РАЗМЕР ОКНА =====
@@ -381,5 +375,5 @@ window.addEventListener('resize', () => {
 });
 
 // ===== СТАРТ =====
-generateWalls();
+buildMap();
 loop();
