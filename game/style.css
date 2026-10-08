@@ -61,3 +61,37 @@ canvas {
 #hud button:hover {
     background: #5fc76a;
 }
+
+#rotate-controls {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    gap: 10px;
+    z-index: 20;
+}
+
+#rotate-controls button {
+    width: 60px;
+    height: 60px;
+    background: #1a1a1a;
+    color: #7ee787;
+    border: 2px solid #7ee787;
+    font-size: 28px;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+#rotate-controls button:hover {
+    background: #7ee787;
+    color: #0d0d0d;
+}
+
+#rotate-controls button:active {
+    transform: scale(0.9);
+}
