@@ -250,8 +250,6 @@ function update() {
 
     camera.x = player.x - canvas.width / 2;
     camera.y = player.y - canvas.height / 2;
-    camera.x = Math.max(0, Math.min(WORLD.width - canvas.width, camera.x));
-    camera.y = Math.max(0, Math.min(WORLD.height - canvas.height, camera.y));
 
     bugs.forEach(bug => {
         if (!bug.alive) return;
