@@ -19,10 +19,10 @@ renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // ===== СВЕТ =====
-const ambientLight = new THREE.AmbientLight(0x404040, 1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
 dirLight.position.set(5, 10, 5);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 1024;
@@ -54,12 +54,20 @@ createWall(0, 10, 0);
 createWall(-10, 0, Math.PI / 2);
 createWall(10, 0, Math.PI / 2);
 
-// ===== ПЕРСОНАЖ =====
-const playerGeometry = new THREE.BoxGeometry(0.8, 1.6, 0.8);
-const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x7ee787 });
+// ===== ПЕРСОНАЖ (СПРАЙТ) =====
+const playerTexture = new THREE.TextureLoader().load('assets/player.png');
+playerTexture.magFilter = THREE.NearestFilter;
+playerTexture.minFilter = THREE.NearestFilter;
+
+const playerGeometry = new THREE.PlaneGeometry(1.5, 1.5);
+const playerMaterial = new THREE.MeshBasicMaterial({
+    map: playerTexture,
+    transparent: true,
+    alphaTest: 0.1,
+    side: THREE.DoubleSide
+});
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
-player.position.set(0, 0.8, 0);
-player.castShadow = true;
+player.position.set(0, 1, 0);
 scene.add(player);
 
 // ===== ЖУКИ =====
@@ -81,7 +89,6 @@ function spawnBug(x, z) {
     });
 }
 
-// Три жука в разных местах
 spawnBug(3, -3);
 spawnBug(-4, 2);
 spawnBug(5, 4);
@@ -91,17 +98,13 @@ const bullets = [];
 
 function shootBullet(targetX, targetY, targetZ) {
     const bulletGeometry = new THREE.SphereGeometry(0.15, 8, 8);
-    const bulletMaterial = new THREE.MeshStandardMaterial({
-        color: 0x7ee787,
-        emissive: 0x7ee787,
-        emissiveIntensity: 1
+    const bulletMaterial = new THREE.MeshBasicMaterial({
+        color: 0x7ee787
     });
     const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
     bullet.position.copy(player.position);
-    bullet.position.y = 1;
     scene.add(bullet);
 
-    // Направление к цели
     const dx = targetX - bullet.position.x;
     const dy = targetY - bullet.position.y;
     const dz = targetZ - bullet.position.z;
@@ -116,7 +119,7 @@ function shootBullet(targetX, targetY, targetZ) {
     });
 }
 
-// ===== УПРАВЛЕНИЕ КЛАВИАТУРОЙ =====
+// ===== КЛАВИАТУРА =====
 const keys = {};
 
 document.addEventListener('keydown', (e) => {
@@ -127,10 +130,10 @@ document.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// ===== УПРАВЛЕНИЕ ТАПОМ =====
+// ===== ТАП =====
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-let targetPosition = new THREE.Vector3(0, 0.8, 0);
+let targetPosition = new THREE.Vector3(0, 1, 0);
 let hasTarget = false;
 
 function onTap(clientX, clientY) {
@@ -139,23 +142,20 @@ function onTap(clientX, clientY) {
 
     raycaster.setFromCamera(mouse, camera);
 
-    // Проверка попадания в жуков
     const bugMeshes = bugs.filter(b => b.alive).map(b => b.mesh);
     const bugIntersects = raycaster.intersectObjects(bugMeshes);
 
     if (bugIntersects.length > 0) {
-        // Попал в жука — стреляем
         const hitBug = bugIntersects[0].object;
         shootBullet(hitBug.position.x, hitBug.position.y, hitBug.position.z);
         return;
     }
 
-    // Проверка попадания в пол
     const floorIntersects = raycaster.intersectObject(floor);
 
     if (floorIntersects.length > 0) {
         const point = floorIntersects[0].point;
-        targetPosition.set(point.x, 0.8, point.z);
+        targetPosition.set(point.x, 1, point.z);
         hasTarget = true;
 
         targetPosition.x = Math.max(-9, Math.min(9, targetPosition.x));
@@ -199,9 +199,12 @@ function updatePlayer() {
 
     player.position.x = Math.max(-9, Math.min(9, player.position.x));
     player.position.z = Math.max(-9, Math.min(9, player.position.z));
+
+    // Спрайт всегда поворачивается к камере (billboard)
+    player.lookAt(camera.position.x, player.position.y, camera.position.z);
 }
 
-// ===== ПУЛИ (ОБНОВЛЕНИЕ) =====
+// ===== ПУЛИ =====
 function updateBullets() {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
@@ -210,7 +213,6 @@ function updateBullets() {
         b.mesh.position.z += b.dz;
         b.life--;
 
-        // Проверка попадания в жука
         for (const bug of bugs) {
             if (!bug.alive) continue;
             const dx = b.mesh.position.x - bug.mesh.position.x;
@@ -249,7 +251,7 @@ function updateCamera() {
         new THREE.Vector3(targetX, targetY, targetZ),
         0.05
     );
-    camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z);
+    camera.lookAt(player.position.x, player.position.y, player.position.z);
 }
 
 // ===== АНИМАЦИЯ =====
