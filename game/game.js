@@ -354,98 +354,44 @@ function draw() {
 
 // ===== СТЕНА =====
 function drawWall(wall) {
-    const height = 60;  // высота стены
-    const sideDepth = 16; // толщина боковой грани
+    const height = 60;
 
-    // ===== ЗАДНЯЯ/БОКОВАЯ ГРАНЬ (тень) =====
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.moveTo(wall.x + sideDepth, wall.y + sideDepth - height);
-    ctx.lineTo(wall.x + wall.size + sideDepth, wall.y + sideDepth - height);
-    ctx.lineTo(wall.x + wall.size + sideDepth, wall.y + wall.size - height);
-    ctx.lineTo(wall.x + sideDepth, wall.y + wall.size - height);
-    ctx.closePath();
-    ctx.fill();
-
-    // ===== ПЕРЕДНЯЯ ГРАНЬ (лицо) =====
+    // ===== ПЕРЕДНЯЯ ГРАНЬ =====
     ctx.fillStyle = '#2a2a2a';
-    ctx.fillRect(wall.x, wall.y - height, wall.size, wall.size);
+    ctx.fillRect(wall.x, wall.y - height, wall.size, wall.size + height);
 
-    // ===== ВЕРХНЯЯ ГРАНЬ (крыша) =====
+    // ===== ВЕРХНЯЯ ГРАНЬ (полоска сверху) =====
     ctx.fillStyle = '#4a4a4a';
-    ctx.beginPath();
-    ctx.moveTo(wall.x, wall.y - height);
-    ctx.lineTo(wall.x + sideDepth, wall.y - height + sideDepth);
-    ctx.lineTo(wall.x + wall.size + sideDepth, wall.y - height + sideDepth);
-    ctx.lineTo(wall.x + wall.size, wall.y - height);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillRect(wall.x, wall.y - height - 12, wall.size, 12);
 
-    // ===== БОКОВАЯ ГРАНЬ (правая) =====
-    ctx.fillStyle = '#333';
-    ctx.beginPath();
-    ctx.moveTo(wall.x + wall.size, wall.y - height);
-    ctx.lineTo(wall.x + wall.size + sideDepth, wall.y - height + sideDepth);
-    ctx.lineTo(wall.x + wall.size + sideDepth, wall.y + wall.size - height + sideDepth);
-    ctx.lineTo(wall.x + wall.size, wall.y + wall.size - height);
-    ctx.closePath();
-    ctx.fill();
-
-    // Обводка
+    // ===== ОБВОДКА =====
     ctx.strokeStyle = '#555';
     ctx.lineWidth = 1;
-    ctx.strokeRect(wall.x, wall.y - height, wall.size, wall.size);
+    ctx.strokeRect(wall.x, wall.y - height - 12, wall.size, wall.size + height + 12);
 }
 
 // ===== ДВЕРЬ =====
 function drawDoor(door) {
-    const height = 60;   // высота двери
-    const sideDepth = 16;
-
-    // ===== БОКОВАЯ ГРАНЬ (тень) =====
-    ctx.fillStyle = '#1a0f05';
-    ctx.beginPath();
-    ctx.moveTo(door.x + sideDepth, door.y + sideDepth - height);
-    ctx.lineTo(door.x + door.size + sideDepth, door.y + sideDepth - height);
-    ctx.lineTo(door.x + door.size + sideDepth, door.y + door.size - height);
-    ctx.lineTo(door.x + sideDepth, door.y + door.size - height);
-    ctx.closePath();
-    ctx.fill();
+    const height = 60;
 
     // ===== ПЕРЕДНЯЯ ГРАНЬ (дверь) =====
-    ctx.fillStyle = '#5a3a1a';  // тёмно-коричневый
-    ctx.fillRect(door.x, door.y - height, door.size, door.size);
+    ctx.fillStyle = '#5a3a1a';
+    ctx.fillRect(door.x + 8, door.y - height, door.size - 16, door.size + height);
 
     // ===== ВЕРХНЯЯ ГРАНЬ =====
     ctx.fillStyle = '#7a5a3a';
-    ctx.beginPath();
-    ctx.moveTo(door.x, door.y - height);
-    ctx.lineTo(door.x + sideDepth, door.y - height + sideDepth);
-    ctx.lineTo(door.x + door.size + sideDepth, door.y - height + sideDepth);
-    ctx.lineTo(door.x + door.size, door.y - height);
-    ctx.closePath();
-    ctx.fill();
-
-    // ===== БОКОВАЯ ГРАНЬ =====
-    ctx.fillStyle = '#4a2a0a';
-    ctx.beginPath();
-    ctx.moveTo(door.x + door.size, door.y - height);
-    ctx.lineTo(door.x + door.size + sideDepth, door.y - height + sideDepth);
-    ctx.lineTo(door.x + door.size + sideDepth, door.y + door.size - height + sideDepth);
-    ctx.lineTo(door.x + door.size, door.y + door.size - height);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillRect(door.x + 8, door.y - height - 12, door.size - 16, 12);
 
     // ===== РУЧКА =====
-    ctx.fillStyle = '#ffcc00';  // золотая
+    ctx.fillStyle = '#ffcc00';
     ctx.beginPath();
-    ctx.arc(door.x + door.size - 20, door.y + door.size / 2 - height, 5, 0, Math.PI * 2);
+    ctx.arc(door.x + door.size - 24, door.y + door.size / 2 - height + 20, 5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Обводка
+    // ===== ОБВОДКА =====
     ctx.strokeStyle = '#3a1a00';
     ctx.lineWidth = 2;
-    ctx.strokeRect(door.x, door.y - height, door.size, door.size);
+    ctx.strokeRect(door.x + 8, door.y - height - 12, door.size - 16, door.size + height + 12);
 }
 
 // ===== ЖУК =====
