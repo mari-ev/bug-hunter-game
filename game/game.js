@@ -147,6 +147,24 @@ function screenToWorld(screenX, screenY) {
     };
 }
 
+// ===== МИР → ЭКРАН =====
+function worldToScreen(wx, wy) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const angle = rotationAngle * Math.PI / 180;
+
+    const dx = wx - camera.x - centerX;
+    const dy = wy - camera.y - centerY;
+
+    const rotatedX = dx * Math.cos(angle) - dy * Math.sin(angle);
+    const rotatedY = dx * Math.sin(angle) + dy * Math.cos(angle);
+
+    return {
+        x: rotatedX + centerX,
+        y: rotatedY + centerY
+    };
+}
+
 // ===== УПРАВЛЕНИЕ =====
 function handleTap(screenX, screenY) {
     const world = screenToWorld(screenX, screenY);
@@ -238,6 +256,11 @@ function update() {
     camera.x = player.x - canvas.width / 2;
     camera.y = player.y - canvas.height / 2;
 
+    // Ограничения камеры
+    const margin = 100;
+    camera.x = Math.max(-margin, Math.min(WORLD.width - canvas.width + margin, camera.x));
+    camera.y = Math.max(-margin, Math.min(WORLD.height - canvas.height + margin, camera.y));
+
     bugs.forEach(bug => {
         if (!bug.alive) return;
         const nextX = bug.x + bug.dx;
@@ -308,13 +331,13 @@ function draw() {
 
     // Тёмное основание стен
     walls.forEach(wall => {
-        ctx.fillStyle = '#151515';
+        ctx.fillStyle = '#0f0f0f';
         ctx.fillRect(wall.x, wall.y, wall.size, wall.size);
     });
 
-    // Двери (основание)
+    // Основание дверей
     doors.forEach(door => {
-        ctx.fillStyle = '#3a2a1a';
+        ctx.fillStyle = '#2a1a0a';
         ctx.fillRect(door.x, door.y, door.size, door.size);
     });
 
@@ -337,25 +360,12 @@ function draw() {
 
     ctx.restore();
 
-    // ===== ВЕРТИКАЛЬНЫЕ СТЕНЫ И ПЕРСОНАЖ =====
-    function worldToScreen(wx, wy) {
-        const dx = wx - camera.x - centerX;
-        const dy = wy - camera.y - centerY;
-        const rotatedX = dx * Math.cos(angle) - dy * Math.sin(angle);
-        const rotatedY = dx * Math.sin(angle) + dy * Math.cos(angle);
-        return {
-            x: rotatedX + centerX,
-            y: rotatedY + centerY
-        };
-    }
-
-    // Собираем стены + двери + персонажа в один массив
+    // ===== ВЕРТИКАЛЬНЫЕ ОБЪЕКТЫ =====
     const verticalObjects = [];
 
     walls.forEach(w => {
         verticalObjects.push({
             type: 'wall',
-            sortY: w.y + w.size,
             worldX: w.x + w.size / 2,
             worldY: w.y + w.size,
             size: w.size
@@ -365,7 +375,6 @@ function draw() {
     doors.forEach(d => {
         verticalObjects.push({
             type: 'door',
-            sortY: d.y + d.size,
             worldX: d.x + d.size / 2,
             worldY: d.y + d.size,
             size: d.size
@@ -374,24 +383,27 @@ function draw() {
 
     verticalObjects.push({
         type: 'player',
-        sortY: player.y + player.height / 2,
         worldX: player.x,
         worldY: player.y + player.height / 2
     });
 
-    // Сортировка по Y (мировому)
-    verticalObjects.sort((a, b) => a.sortY - b.sortY);
+    // ===== СОРТИРОВКА ПО ЭКРАННОМУ Y =====
+    verticalObjects.forEach(obj => {
+        const pos = worldToScreen(obj.worldX, obj.worldY);
+        obj.screenY = pos.y;
+        obj.screenX = pos.x;
+    });
+
+    verticalObjects.sort((a, b) => a.screenY - b.screenY);
 
     // Рисуем по порядку
     verticalObjects.forEach(obj => {
-        const pos = worldToScreen(obj.worldX, obj.worldY);
-
         if (obj.type === 'wall') {
-            drawWallVertical(pos.x, pos.y, obj.size);
+            drawWallVertical(obj.screenX, obj.screenY, obj.size);
         } else if (obj.type === 'door') {
-            drawDoorVertical(pos.x, pos.y, obj.size);
+            drawDoorVertical(obj.screenX, obj.screenY, obj.size);
         } else if (obj.type === 'player') {
-            drawPlayerVertical(pos.x, pos.y);
+            drawPlayerVertical(obj.screenX, obj.screenY);
         }
     });
 }
@@ -413,17 +425,27 @@ function drawBug(bug) {
 function drawWallVertical(x, y, size) {
     const height = 80;
 
+    // Тень (справа-снизу)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(x - size / 2, y);
+    ctx.lineTo(x + size / 2, y);
+    ctx.lineTo(x + size / 2 + 10, y + 6);
+    ctx.lineTo(x - size / 2 + 10, y + 6);
+    ctx.closePath();
+    ctx.fill();
+
     // Передняя грань
     ctx.fillStyle = '#2a2a2a';
     ctx.fillRect(x - size / 2, y - height, size, height);
 
-    // Верхняя грань (крыша)
+    // Верхняя грань
     ctx.fillStyle = '#4a4a4a';
     ctx.fillRect(x - size / 2, y - height - 12, size, 12);
 
     // Обводка
     ctx.strokeStyle = '#444';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.strokeRect(x - size / 2, y - height - 12, size, height + 12);
 }
 
@@ -431,6 +453,16 @@ function drawWallVertical(x, y, size) {
 function drawDoorVertical(x, y, size) {
     const height = 80;
     const doorWidth = size - 24;
+
+    // Тень
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(x - doorWidth / 2, y);
+    ctx.lineTo(x + doorWidth / 2, y);
+    ctx.lineTo(x + doorWidth / 2 + 10, y + 6);
+    ctx.lineTo(x - doorWidth / 2 + 10, y + 6);
+    ctx.closePath();
+    ctx.fill();
 
     // Передняя грань
     ctx.fillStyle = '#5a3a1a';
@@ -448,7 +480,7 @@ function drawDoorVertical(x, y, size) {
 
     // Обводка
     ctx.strokeStyle = '#3a1a00';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.strokeRect(x - doorWidth / 2, y - height - 12, doorWidth, height + 12);
 }
 
