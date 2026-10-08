@@ -46,8 +46,8 @@ const WORLD = {
 // ===== КАМЕРА =====
 const camera = { x: 0, y: 0 };
 
-// ===== УГОЛ ПОВОРОТА =====
-let rotationAngle = 0; // 0, 90, 180, 270
+// ===== УГОЛ =====
+let rotationAngle = 0;
 
 // ===== СТЕНЫ, ДВЕРИ =====
 const walls = [];
@@ -73,7 +73,7 @@ const bullets = [];
 // ===== СЧЁТ =====
 let score = 0;
 
-// ===== ПОСТРОЙКА КАРТЫ =====
+// ===== ПОСТРОЙКА =====
 function buildMap() {
     walls.length = 0;
     doors.length = 0;
@@ -90,11 +90,6 @@ function buildMap() {
                 walls.push({ x, y, size: TILE });
             } else if (char === 'D') {
                 doors.push({ x, y, size: TILE });
-            } else if (char === 'P') {
-                player.x = x + TILE / 2;
-                player.y = y + TILE / 2;
-                player.targetX = player.x;
-                player.targetY = player.y;
             } else if (char === 'B') {
                 bugs.push({
                     x: x + TILE / 2,
@@ -110,12 +105,10 @@ function buildMap() {
         }
     }
 
-    if (player.x === 200 && player.y === 200) {
-        player.x = TILE * 1.5;
-        player.y = TILE * 1.5;
-        player.targetX = player.x;
-        player.targetY = player.y;
-    }
+    player.x = TILE * 1.5;
+    player.y = TILE * 1.5;
+    player.targetX = player.x;
+    player.targetY = player.y;
 }
 
 // ===== КОЛЛИЗИИ =====
@@ -136,22 +129,18 @@ function canMove(x, y, width, height) {
            !isWall(x + half, y + half);
 }
 
-// ===== ПЕРЕСЧЁТ КООРДИНАТ (с учётом поворота) =====
-// Экранные координаты → мировые
+// ===== ЭКРАН → МИР =====
 function screenToWorld(screenX, screenY) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
-    // Относительно центра экрана
     let dx = screenX - centerX;
     let dy = screenY - centerY;
 
-    // Поворачиваем в обратную сторону (чтобы получить мировые координаты)
     const angle = -rotationAngle * Math.PI / 180;
     const rotatedX = dx * Math.cos(angle) - dy * Math.sin(angle);
     const rotatedY = dx * Math.sin(angle) + dy * Math.cos(angle);
 
-    // Прибавляем позицию камеры
     return {
         x: rotatedX + centerX + camera.x,
         y: rotatedY + centerY + camera.y
@@ -203,15 +192,13 @@ canvas.addEventListener('touchstart', (e) => {
     handleTap(touch.clientX - rect.left, touch.clientY - rect.top);
 }, { passive: false });
 
-// ===== КНОПКИ ПОВОРОТА =====
+// ===== КНОПКИ =====
 rotateLeftBtn.addEventListener('click', () => {
     rotationAngle = (rotationAngle - 90 + 360) % 360;
-    console.log('Угол:', rotationAngle);
 });
 
 rotateRightBtn.addEventListener('click', () => {
     rotationAngle = (rotationAngle + 90) % 360;
-    console.log('Угол:', rotationAngle);
 });
 
 // ===== СТРЕЛЬБА =====
@@ -291,18 +278,15 @@ function draw() {
     ctx.fillStyle = '#050505';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.save();
-
-    // Центр экрана
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
+    const angle = rotationAngle * Math.PI / 180;
 
-    // Сдвигаем к центру, поворачиваем, потом сдвигаем обратно
+    // ===== ПОВЁРНУТЫЙ МИР (пол, жуки, пули) =====
+    ctx.save();
     ctx.translate(centerX, centerY);
-    ctx.rotate(rotationAngle * Math.PI / 180);
+    ctx.rotate(angle);
     ctx.translate(-centerX, -centerY);
-
-    // Камера
     ctx.translate(-camera.x, -camera.y);
 
     // Пол
@@ -322,19 +306,21 @@ function draw() {
         }
     }
 
-    // Объекты (сортировка — как есть, потом исправим)
-    const allObjects = [
-        ...walls.map(w => ({ type: 'wall', y: w.y + w.size, data: w })),
-        ...doors.map(d => ({ type: 'door', y: d.y + d.size, data: d })),
-        ...bugs.filter(b => b.alive).map(b => ({ type: 'bug', y: b.y + b.height / 2, data: b })),
-        { type: 'player', y: player.y + player.height / 2, data: player }
-    ].sort((a, b) => a.y - b.y);
+    // Тёмное основание стен
+    walls.forEach(wall => {
+        ctx.fillStyle = '#151515';
+        ctx.fillRect(wall.x, wall.y, wall.size, wall.size);
+    });
 
-    allObjects.forEach(obj => {
-        if (obj.type === 'wall') drawWall(obj.data);
-        else if (obj.type === 'door') drawDoor(obj.data);
-        else if (obj.type === 'bug') drawBug(obj.data);
-        else if (obj.type === 'player') drawPlayer(obj.data);
+    // Двери (основание)
+    doors.forEach(door => {
+        ctx.fillStyle = '#3a2a1a';
+        ctx.fillRect(door.x, door.y, door.size, door.size);
+    });
+
+    // Жуки
+    bugs.forEach(bug => {
+        if (bug.alive) drawBug(bug);
     });
 
     // Пули
@@ -350,48 +336,64 @@ function draw() {
     });
 
     ctx.restore();
-}
 
-// ===== СТЕНА =====
-function drawWall(wall) {
-    const height = 60;
+    // ===== ВЕРТИКАЛЬНЫЕ СТЕНЫ И ПЕРСОНАЖ =====
+    function worldToScreen(wx, wy) {
+        const dx = wx - camera.x - centerX;
+        const dy = wy - camera.y - centerY;
+        const rotatedX = dx * Math.cos(angle) - dy * Math.sin(angle);
+        const rotatedY = dx * Math.sin(angle) + dy * Math.cos(angle);
+        return {
+            x: rotatedX + centerX,
+            y: rotatedY + centerY
+        };
+    }
 
-    // ===== ПЕРЕДНЯЯ ГРАНЬ =====
-    ctx.fillStyle = '#2a2a2a';
-    ctx.fillRect(wall.x, wall.y - height, wall.size, wall.size + height);
+    // Собираем стены + двери + персонажа в один массив
+    const verticalObjects = [];
 
-    // ===== ВЕРХНЯЯ ГРАНЬ (полоска сверху) =====
-    ctx.fillStyle = '#4a4a4a';
-    ctx.fillRect(wall.x, wall.y - height - 12, wall.size, 12);
+    walls.forEach(w => {
+        verticalObjects.push({
+            type: 'wall',
+            sortY: w.y + w.size,
+            worldX: w.x + w.size / 2,
+            worldY: w.y + w.size,
+            size: w.size
+        });
+    });
 
-    // ===== ОБВОДКА =====
-    ctx.strokeStyle = '#555';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(wall.x, wall.y - height - 12, wall.size, wall.size + height + 12);
-}
+    doors.forEach(d => {
+        verticalObjects.push({
+            type: 'door',
+            sortY: d.y + d.size,
+            worldX: d.x + d.size / 2,
+            worldY: d.y + d.size,
+            size: d.size
+        });
+    });
 
-// ===== ДВЕРЬ =====
-function drawDoor(door) {
-    const height = 60;
+    verticalObjects.push({
+        type: 'player',
+        sortY: player.y + player.height / 2,
+        worldX: player.x,
+        worldY: player.y + player.height / 2
+    });
 
-    // ===== ПЕРЕДНЯЯ ГРАНЬ (дверь) =====
-    ctx.fillStyle = '#5a3a1a';
-    ctx.fillRect(door.x + 8, door.y - height, door.size - 16, door.size + height);
+    // Сортировка по Y (мировому)
+    verticalObjects.sort((a, b) => a.sortY - b.sortY);
 
-    // ===== ВЕРХНЯЯ ГРАНЬ =====
-    ctx.fillStyle = '#7a5a3a';
-    ctx.fillRect(door.x + 8, door.y - height - 12, door.size - 16, 12);
+    // Рисуем по порядку
+    verticalObjects.forEach(obj => {
+        const pos = worldToScreen(obj.worldX, obj.worldY);
 
-    // ===== РУЧКА =====
-    ctx.fillStyle = '#ffcc00';
-    ctx.beginPath();
-    ctx.arc(door.x + door.size - 24, door.y + door.size / 2 - height + 20, 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // ===== ОБВОДКА =====
-    ctx.strokeStyle = '#3a1a00';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(door.x + 8, door.y - height - 12, door.size - 16, door.size + height + 12);
+        if (obj.type === 'wall') {
+            drawWallVertical(pos.x, pos.y, obj.size);
+        } else if (obj.type === 'door') {
+            drawDoorVertical(pos.x, pos.y, obj.size);
+        } else if (obj.type === 'player') {
+            drawPlayerVertical(pos.x, pos.y);
+        }
+    });
 }
 
 // ===== ЖУК =====
@@ -407,18 +409,69 @@ function drawBug(bug) {
     ctx.fill();
 }
 
-// ===== ПЕРСОНАЖ =====
-function drawPlayer(p) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+// ===== ВЕРТИКАЛЬНАЯ СТЕНА =====
+function drawWallVertical(x, y, size) {
+    const height = 80;
+
+    // Передняя грань
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(x - size / 2, y - height, size, height);
+
+    // Верхняя грань (крыша)
+    ctx.fillStyle = '#4a4a4a';
+    ctx.fillRect(x - size / 2, y - height - 12, size, 12);
+
+    // Обводка
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - size / 2, y - height - 12, size, height + 12);
+}
+
+// ===== ВЕРТИКАЛЬНАЯ ДВЕРЬ =====
+function drawDoorVertical(x, y, size) {
+    const height = 80;
+    const doorWidth = size - 24;
+
+    // Передняя грань
+    ctx.fillStyle = '#5a3a1a';
+    ctx.fillRect(x - doorWidth / 2, y - height, doorWidth, height);
+
+    // Верхняя грань
+    ctx.fillStyle = '#7a5a3a';
+    ctx.fillRect(x - doorWidth / 2, y - height - 12, doorWidth, 12);
+
+    // Ручка
+    ctx.fillStyle = '#ffcc00';
     ctx.beginPath();
-    ctx.ellipse(p.x + 10, p.y + p.height / 2 + 10, p.width / 3, 8, 0, 0, Math.PI * 2);
+    ctx.arc(x + doorWidth / 2 - 10, y - height / 2, 5, 0, Math.PI * 2);
     ctx.fill();
 
+    // Обводка
+    ctx.strokeStyle = '#3a1a00';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - doorWidth / 2, y - height - 12, doorWidth, height + 12);
+}
+
+// ===== ВЕРТИКАЛЬНЫЙ ПЕРСОНАЖ =====
+function drawPlayerVertical(x, y) {
+    // Тень
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.beginPath();
+    ctx.ellipse(x + 5, y + 5, player.width / 3, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Спрайт
     if (playerImg.complete && playerImg.naturalWidth > 0) {
-        ctx.drawImage(playerImg, p.x - p.width / 2, p.y - p.height / 2, p.width, p.height);
+        ctx.drawImage(
+            playerImg,
+            x - player.width / 2,
+            y - player.height,
+            player.width,
+            player.height
+        );
     } else {
         ctx.fillStyle = '#7ee787';
-        ctx.fillRect(p.x - p.width / 2, p.y - p.height / 2, p.width, p.height);
+        ctx.fillRect(x - player.width / 2, y - player.height, player.width, player.height);
     }
 }
 
