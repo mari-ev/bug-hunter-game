@@ -14,7 +14,7 @@ canvas.height = window.innerHeight;
 // ===== ТАЙЛ =====
 const TILE = 96;
 
-// ===== КАРТА (текстом) =====
+// ===== КАРТА =====
 const MAP = [
     "####################",
     "#..................#",
@@ -48,13 +48,13 @@ const camera = { x: 0, y: 0 };
 const walls = [];
 const doors = [];
 
-// ===== ПЕРСОНАЖ =====
+// ===== ПЕРСОНАЖ (скорость выше) =====
 const player = {
     x: 200,
     y: 200,
     width: 96,
     height: 96,
-    speed: 4,
+    speed: 8,          // ← было 4, стало 8
     targetX: 200,
     targetY: 200
 };
@@ -73,6 +73,7 @@ function buildMap() {
     walls.length = 0;
     doors.length = 0;
     bugs.length = 0;
+    bullets.length = 0;
 
     for (let row = 0; row < MAP.length; row++) {
         for (let col = 0; col < MAP[row].length; col++) {
@@ -95,8 +96,8 @@ function buildMap() {
                     y: y + TILE / 2,
                     width: 40,
                     height: 24,
-                    dx: (Math.random() - 0.5) * 2,
-                    dy: (Math.random() - 0.5) * 2,
+                    dx: (Math.random() - 0.5) * 1.5,
+                    dy: (Math.random() - 0.5) * 1.5,
                     color: '#ff6b6b',
                     alive: true
                 });
@@ -104,7 +105,6 @@ function buildMap() {
         }
     }
 
-    // Если в карте не было 'P' — ставим в первой комнате
     if (player.x === 200 && player.y === 200) {
         player.x = TILE * 1.5;
         player.y = TILE * 1.5;
@@ -136,11 +136,12 @@ function handleTap(screenX, screenY) {
     const worldX = screenX + camera.x;
     const worldY = screenY + camera.y;
 
+    // Проверка: попал ли тап по жуку
     let hitBug = false;
     for (const bug of bugs) {
         if (!bug.alive) continue;
-        const dx = (worldX - bug.x) / (bug.width / 2);
-        const dy = (worldY - bug.y) / (bug.height / 2);
+        const dx = (worldX - bug.x) / (bug.width);
+        const dy = (worldY - bug.y) / (bug.height);
         if (dx * dx + dy * dy < 1) {
             shootAt(bug.x, bug.y);
             hitBug = true;
@@ -166,6 +167,7 @@ canvas.addEventListener('touchstart', (e) => {
     handleTap(touch.clientX - rect.left, touch.clientY - rect.top);
 }, { passive: false });
 
+// ===== СТРЕЛЬБА =====
 function shootAt(targetX, targetY) {
     const dx = targetX - player.x;
     const dy = targetY - player.y;
@@ -174,9 +176,9 @@ function shootAt(targetX, targetY) {
     bullets.push({
         x: player.x,
         y: player.y,
-        dx: (dx / length) * 15,
-        dy: (dy / length) * 15,
-        size: 8,
+        dx: (dx / length) * 18,
+        dy: (dy / length) * 18,
+        size: 10,
         color: '#7ee787'
     });
 }
@@ -225,6 +227,7 @@ function update() {
         }
     });
 
+    // Проверка попаданий
     bullets.forEach((bullet, bIndex) => {
         bugs.forEach((bug) => {
             if (!bug.alive) return;
@@ -247,7 +250,7 @@ function draw() {
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
 
-    // ===== ПОЛ =====
+    // Пол
     for (let row = 0; row < MAP.length; row++) {
         for (let col = 0; col < MAP[row].length; col++) {
             const char = MAP[row][col];
@@ -255,7 +258,6 @@ function draw() {
             const y = row * TILE;
 
             if (char !== '#') {
-                // Пол
                 ctx.fillStyle = '#1a1a1a';
                 ctx.fillRect(x, y, TILE, TILE);
                 ctx.strokeStyle = '#252525';
@@ -265,7 +267,7 @@ function draw() {
         }
     }
 
-    // ===== ОБЪЕКТЫ (сортировка) =====
+    // Объекты (сортировка)
     const allObjects = [
         ...walls.map(w => ({ type: 'wall', y: w.y + w.size, data: w })),
         ...doors.map(d => ({ type: 'door', y: d.y + d.size, data: d })),
@@ -364,7 +366,6 @@ function loop() {
 restartBtn.addEventListener('click', () => {
     score = 0;
     scoreEl.textContent = 0;
-    bullets.length = 0;
     buildMap();
 });
 
