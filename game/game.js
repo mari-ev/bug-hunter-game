@@ -2,6 +2,8 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const restartBtn = document.getElementById('restart');
+const rotateLeftBtn = document.getElementById('rotate-left');
+const rotateRightBtn = document.getElementById('rotate-right');
 
 // ===== СПРАЙТ =====
 const playerImg = new Image();
@@ -43,6 +45,9 @@ const WORLD = {
 
 // ===== КАМЕРА =====
 const camera = { x: 0, y: 0 };
+
+// ===== УГОЛ ПОВОРОТА =====
+let rotationAngle = 0; // 0, 90, 180, 270
 
 // ===== СТЕНЫ, ДВЕРИ =====
 const walls = [];
@@ -111,9 +116,6 @@ function buildMap() {
         player.targetX = player.x;
         player.targetY = player.y;
     }
-
-    console.log('Карта построена. Жуков:', bugs.length);
-    bugs.forEach((b, i) => console.log(`Жук ${i}:`, b.x, b.y));
 }
 
 // ===== КОЛЛИЗИИ =====
@@ -134,16 +136,33 @@ function canMove(x, y, width, height) {
            !isWall(x + half, y + half);
 }
 
-// ===== УПРАВЛЕНИЕ (С ЛОГАМИ) =====
-function handleTap(screenX, screenY) {
-    const worldX = screenX + camera.x;
-    const worldY = screenY + camera.y;
+// ===== ПЕРЕСЧЁТ КООРДИНАТ (с учётом поворота) =====
+// Экранные координаты → мировые
+function screenToWorld(screenX, screenY) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
 
-    console.log('--- ТАП ---');
-    console.log('Экран:', screenX, screenY);
-    console.log('Камера:', camera.x, camera.y);
-    console.log('Мир:', worldX, worldY);
-    console.log('Жуков:', bugs.length);
+    // Относительно центра экрана
+    let dx = screenX - centerX;
+    let dy = screenY - centerY;
+
+    // Поворачиваем в обратную сторону (чтобы получить мировые координаты)
+    const angle = -rotationAngle * Math.PI / 180;
+    const rotatedX = dx * Math.cos(angle) - dy * Math.sin(angle);
+    const rotatedY = dx * Math.sin(angle) + dy * Math.cos(angle);
+
+    // Прибавляем позицию камеры
+    return {
+        x: rotatedX + centerX + camera.x,
+        y: rotatedY + centerY + camera.y
+    };
+}
+
+// ===== УПРАВЛЕНИЕ =====
+function handleTap(screenX, screenY) {
+    const world = screenToWorld(screenX, screenY);
+    const worldX = world.x;
+    const worldY = world.y;
 
     let hitBug = false;
     let closestBug = null;
@@ -154,8 +173,6 @@ function handleTap(screenX, screenY) {
         const distToBug = Math.sqrt(
             (worldX - bug.x) ** 2 + (worldY - bug.y) ** 2
         );
-        console.log(`Жук (${bug.x}, ${bug.y}) — расстояние: ${distToBug.toFixed(1)}`);
-
         const hitRadius = Math.max(bug.width, bug.height) / 2 + 50;
         if (distToBug < hitRadius && distToBug < closestDist) {
             closestBug = bug;
@@ -164,13 +181,11 @@ function handleTap(screenX, screenY) {
     }
 
     if (closestBug) {
-        console.log('ПОПАЛ! Стреляем в', closestBug.x, closestBug.y);
         shootAt(closestBug.x, closestBug.y);
         hitBug = true;
     }
 
     if (!hitBug) {
-        console.log('НЕ ПОПАЛ — идём в', worldX, worldY);
         player.targetX = worldX;
         player.targetY = worldY;
     }
@@ -187,6 +202,17 @@ canvas.addEventListener('touchstart', (e) => {
     const rect = canvas.getBoundingClientRect();
     handleTap(touch.clientX - rect.left, touch.clientY - rect.top);
 }, { passive: false });
+
+// ===== КНОПКИ ПОВОРОТА =====
+rotateLeftBtn.addEventListener('click', () => {
+    rotationAngle = (rotationAngle - 90 + 360) % 360;
+    console.log('Угол:', rotationAngle);
+});
+
+rotateRightBtn.addEventListener('click', () => {
+    rotationAngle = (rotationAngle + 90) % 360;
+    console.log('Угол:', rotationAngle);
+});
 
 // ===== СТРЕЛЬБА =====
 function shootAt(targetX, targetY) {
@@ -268,6 +294,17 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
+
+    // Центр экрана
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // Сдвигаем к центру, поворачиваем, потом сдвигаем обратно
+    ctx.translate(centerX, centerY);
+    ctx.rotate(rotationAngle * Math.PI / 180);
+    ctx.translate(-centerX, -centerY);
+
+    // Камера
     ctx.translate(-camera.x, -camera.y);
 
     // Пол
@@ -287,7 +324,7 @@ function draw() {
         }
     }
 
-    // Объекты
+    // Объекты (сортировка — как есть, потом исправим)
     const allObjects = [
         ...walls.map(w => ({ type: 'wall', y: w.y + w.size, data: w })),
         ...doors.map(d => ({ type: 'door', y: d.y + d.size, data: d })),
