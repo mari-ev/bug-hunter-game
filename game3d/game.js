@@ -316,7 +316,7 @@ createTable(-2, -17);
 createTable(2, -17);
 createChair(-2, -15.5, Math.PI);
 createChair(2, -15.5, Math.PI);
-createChair(-3, - |17, Math.PI / 2);
+createChair(-3, - 17, Math.PI / 2);
 createChair(3, -17, -Math.PI / 2);
 createCooler(4, -19);
 
