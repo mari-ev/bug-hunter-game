@@ -42,7 +42,7 @@ const waterMaterial = new THREE.MeshStandardMaterial({
     opacity: 0.7
 });
 
-// ===== ГРАНИЦЫ МИРА (для пола и стен) =====
+// ===== ГРАНИЦЫ МИРА =====
 const WORLD = {
     minX: -20,
     maxX: 20,
@@ -50,12 +50,12 @@ const WORLD = {
     maxZ: 22.5
 };
 
-const worldWidth = WORLD.maxX - WORLD.minX;   // 40
-const worldDepth = WORLD.maxZ - WORLD.minZ;   // 47.5
-const worldCenterX = (WORLD.minX + WORLD.maxX) / 2;  // 0
-const worldCenterZ = (WORLD.minZ + WORLD.maxZ) / 2;  // -1.25
+const worldWidth = WORLD.maxX - WORLD.minX;
+const worldDepth = WORLD.maxZ - WORLD.minZ;
+const worldCenterX = (WORLD.minX + WORLD.maxX) / 2;
+const worldCenterZ = (WORLD.minZ + WORLD.maxZ) / 2;
 
-// ===== ПОЛ (ровно по стенам) =====
+// ===== ПОЛ =====
 const floorGeometry = new THREE.PlaneGeometry(worldWidth, worldDepth);
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
@@ -64,7 +64,7 @@ floor.position.z = worldCenterZ;
 floor.receiveShadow = true;
 scene.add(floor);
 
-// ===== МАССИВ СТЕН (для коллизий) =====
+// ===== МАССИВ СТЕН =====
 const walls = [];
 
 // ===== ФУНКЦИЯ СОЗДАНИЯ СТЕНЫ =====
@@ -78,52 +78,79 @@ function createWall(x, z, width, depth) {
     walls.push({ x, z, width, depth });
 }
 
-// ===== ВНЕШНИЕ СТЕНЫ (ровно по краям пола) =====
-createWall(worldCenterX, WORLD.minZ, worldWidth, 0.5);  // задняя
-createWall(worldCenterX, WORLD.maxZ, worldWidth, 0.5);  // передняя
-createWall(WORLD.minX, worldCenterZ, 0.5, worldDepth);  // левая
-createWall(WORLD.maxX, worldCenterZ, 0.5, worldDepth);  // правая
+// ===== ВНЕШНИЕ СТЕНЫ =====
+createWall(worldCenterX, WORLD.minZ, worldWidth, 0.5);
+createWall(worldCenterX, WORLD.maxZ, worldWidth, 0.5);
+createWall(WORLD.minX, worldCenterZ, 0.5, worldDepth);
+createWall(WORLD.maxX, worldCenterZ, 0.5, worldDepth);
 
 // ===== ВНУТРЕННИЕ СТЕНЫ (комнаты) =====
 
-// Комната 1 (стартовая, центр 0,0)
-createWall(0, -5, 10, 0.5);
-createWall(-5, 0, 0.5, 10);
-createWall(5, 0, 0.5, 10);
-createWall(0, 5, 4, 0.5);
+// ===== КОМНАТА 1 (стартовая, центр 0,0) =====
+// Стены с дырой под дверь справа (x=5, z от -1.5 до 1.5 — дверь)
+createWall(0, -5, 10, 0.5);          // задняя
+createWall(-5, 0, 0.5, 10);          // левая
+createWall(5, -3.25, 0.5, 3.5);      // правая (верхняя часть)
+createWall(5, 3.25, 0.5, 3.5);       // правая (нижняя часть)
+createWall(0, 5, 4, 0.5);            // передняя (с дырой)
 
-// Комната 2 (справа, центр 15,0)
-createWall(15, -5, 10, 0.5);
-createWall(20, 0, 0.5, 10);
-createWall(15, 5, 10, 0.5);
+// ===== КОМНАТА 2 (справа, центр 15,0) =====
+// Дыра под дверь слева (x=10, z от -1.5 до 1.5)
+createWall(10, -3.25, 0.5, 3.5);     // левая (верхняя)
+createWall(10, 3.25, 0.5, 3.5);      // левая (нижняя)
+createWall(15, -5, 10, 0.5);         // задняя
+createWall(20, 0, 0.5, 10);          // правая
+createWall(15, 5, 10, 0.5);          // передняя
 
-// Комната 3 (снизу, центр 0,-15)
-createWall(0, -20, 10, 0.5);
-createWall(-5, -15, 0.5, 10);
-createWall(5, -15, 0.5, 10);
-createWall(0, -10, 4, 0.5);
+// ===== КОМНАТА 3 (снизу, центр 0,-15) =====
+// Дыра под дверь сверху (z=-10, x от -1.5 до 1.5)
+createWall(-3.25, -10, 3.5, 0.5);    // передняя (левая)
+createWall(3.25, -10, 3.5, 0.5);     // передняя (правая)
+createWall(0, -20, 10, 0.5);         // задняя
+createWall(-5, -15, 0.5, 10);        // левая
+createWall(5, -15, 0.5, 10);         // правая
 
-// Комната 4 (снизу-справа, центр 15,-15)
-createWall(15, -20, 10, 0.5);
-createWall(20, -15, 0.5, 10);
-createWall(15, -10, 10, 0.5);
+// ===== КОМНАТА 4 (снизу-справа, центр 15,-15) =====
+createWall(10, -15, 0.5, 10);        // левая
+createWall(15, -20, 10, 0.5);        // задняя
+createWall(20, -15, 0.5, 10);        // правая
+createWall(15, -10, 10, 0.5);        // передняя
 
-// ===== ДВЕРИ =====
-const door1 = new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 2.5, 3),
-    doorMaterial
-);
-door1.position.set(10, 1.25, 0);
-door1.castShadow = true;
-scene.add(door1);
+// ===== ДВЕРИ (открывающиеся) =====
+const doors = [];
 
-const door2 = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 2.5, 0.3),
-    doorMaterial
-);
-door2.position.set(0, 1.25, -10);
-door2.castShadow = true;
-scene.add(door2);
+// Дверь 1 — между комнатой 1 и 2 (вертикальная, x=10, z=0)
+function createDoor(x, z, width, height, depth, rotY = 0) {
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+    const door = new THREE.Mesh(geometry, doorMaterial);
+    door.position.set(x, height / 2, z);
+    door.rotation.y = rotY;
+    door.castShadow = true;
+    door.receiveShadow = true;
+    scene.add(door);
+
+    const doorData = {
+        mesh: door,
+        startX: x,
+        startZ: z,
+        rotY: rotY,
+        open: false,
+        openAmount: 0,
+        // Ось вращения — левый край двери
+        pivotX: x - Math.cos(rotY) * width / 2,
+        pivotZ: z + Math.sin(rotY) * width / 2,
+        width: width
+    };
+    doors.push(doorData);
+    return doorData;
+}
+
+// Дверь между комнатой 1 и 2 (на x=10, z=0)
+// Дверь вертикальная — открывается «вбок»
+createDoor(10, 0, 0.3, 2.5, 3, 0);
+
+// Дверь между комнатой 1 и 3 (на z=-10, x=0)
+createDoor(0, -10, 3, 2.5, 0.3, 0);
 
 // ===== СТОЛ =====
 function createTable(x, z, rotY = 0) {
@@ -162,7 +189,7 @@ function createTable(x, z, rotY = 0) {
     walls.push({ x, z, width: 2, depth: 1 });
 }
 
-// ===== ОФИСНЫЙ СТУЛ НА КОЛЁСИКАХ =====
+// ===== СТУЛ =====
 function createChair(x, z, rotY = 0) {
     const group = new THREE.Group();
 
@@ -263,9 +290,8 @@ function createCooler(x, z) {
     walls.push({ x, z, width: 0.6, depth: 0.6 });
 }
 
-// ===== РАССТАНОВКА МЕБЕЛИ =====
+// ===== РАССТАНОВКА =====
 
-// Комната 1
 createTable(-2, -2);
 createTable(2, -2);
 createChair(-2, -0.5, Math.PI);
@@ -274,7 +300,6 @@ createChair(-3, -2, Math.PI / 2);
 createChair(3, -2, -Math.PI / 2);
 createCooler(4, 4);
 
-// Комната 2
 createTable(13, -2);
 createTable(17, -2);
 createTable(15, 2);
@@ -284,7 +309,6 @@ createChair(15, 3.5, Math.PI);
 createChair(15, 2, Math.PI / 2);
 createCooler(19, 4);
 
-// Комната 3
 createTable(-2, -17);
 createTable(2, -17);
 createChair(-2, -15.5, Math.PI);
@@ -293,7 +317,6 @@ createChair(-3, -17, Math.PI / 2);
 createChair(3, -17, -Math.PI / 2);
 createCooler(4, -19);
 
-// Комната 4
 createTable(13, -17);
 createTable(17, -17);
 createChair(13, -15.5, Math.PI);
@@ -446,6 +469,10 @@ function updatePlayer() {
         }
     }
 
+    // Двери открываются автоматически, если игрок близко
+    updateDoors(newX, newZ);
+
+    // Коллизии
     if (canMoveTo(newX, player.position.z)) {
         player.position.x = newX;
     }
@@ -456,6 +483,33 @@ function updatePlayer() {
     player.lookAt(camera.position.x, player.position.y, camera.position.z);
     player.rotation.x = 0;
     player.rotation.z = 0;
+}
+
+// ===== ДВЕРИ (открывание) =====
+function updateDoors(playerX, playerZ) {
+    const triggerDistance = 2.5;
+
+    doors.forEach(door => {
+        const dx = playerX - door.mesh.position.x;
+        const dz = playerZ - door.mesh.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist < triggerDistance) {
+            // Открываем
+            door.open = true;
+        } else {
+            // Закрываем
+            door.open = false;
+        }
+
+        // Плавно меняем угол
+        const targetAmount = door.open ? 1 : 0;
+        door.openAmount += (targetAmount - door.openAmount) * 0.1;
+
+        // Поворачиваем дверь вокруг левого края
+        const angle = door.openAmount * Math.PI / 2;
+        door.mesh.rotation.y = door.rotY + angle;
+    });
 }
 
 // ===== ПУЛИ =====
