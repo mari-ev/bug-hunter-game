@@ -49,11 +49,21 @@ floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 scene.add(floor);
 
-// ===== СТЕНЫ =====
+// ===== МАССИВ СТЕН (для коллизий) =====
+const walls = [];
 
-// ===== СТЕНЫ =====
+// ===== ФУНКЦИЯ СОЗДАНИЯ СТЕНЫ =====
+function createWall(x, z, width, depth) {
+    const geometry = new THREE.BoxGeometry(width, 3, depth);
+    const wall = new THREE.Mesh(geometry, wallMaterial);
+    wall.position.set(x, 1.5, z);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    scene.add(wall);
+    walls.push({ x, z, width, depth });
+}
 
-// ===== ВНЕШНИЕ СТЕНЫ (большая комната 30×30) =====
+// ===== ВНЕШНИЕ СТЕНЫ (большая комната) =====
 createWall(0, -25, 40, 0.5);       // задняя внешняя
 createWall(0, 20, 40, 0.5);        // передняя внешняя
 createWall(-20, -2.5, 0.5, 45);    // левая внешняя
@@ -62,26 +72,26 @@ createWall(20, -2.5, 0.5, 45);     // правая внешняя
 // ===== ВНУТРЕННИЕ СТЕНЫ (комнаты) =====
 
 // Комната 1 (стартовая, центр 0,0)
-createWall(0, -5, 10, 0.5);        // задняя
-createWall(-5, 0, 0.5, 10);        // левая
-createWall(5, 0, 0.5, 10);         // правая
-createWall(0, 5, 4, 0.5);          // передняя (с дырой под дверь)
+createWall(0, -5, 10, 0.5);
+createWall(-5, 0, 0.5, 10);
+createWall(5, 0, 0.5, 10);
+createWall(0, 5, 4, 0.5);
 
 // Комната 2 (справа, центр 15,0)
-createWall(15, -5, 10, 0.5);       // задняя
-createWall(20, 0, 0.5, 10);        // правая
-createWall(15, 5, 10, 0.5);        // передняя
+createWall(15, -5, 10, 0.5);
+createWall(20, 0, 0.5, 10);
+createWall(15, 5, 10, 0.5);
 
 // Комната 3 (снизу, центр 0,-15)
-createWall(0, -20, 10, 0.5);       // задняя
-createWall(-5, -15, 0.5, 10);      // левая
-createWall(5, -15, 0.5, 10);       // правая
-createWall(0, -10, 4, 0.5);        // передняя (с дырой)
+createWall(0, -20, 10, 0.5);
+createWall(-5, -15, 0.5, 10);
+createWall(5, -15, 0.5, 10);
+createWall(0, -10, 4, 0.5);
 
 // Комната 4 (снизу-справа, центр 15,-15)
-createWall(15, -20, 10, 0.5);      // задняя
-createWall(20, -15, 0.5, 10);      // правая
-createWall(15, -10, 10, 0.5);      // передняя
+createWall(15, -20, 10, 0.5);
+createWall(20, -15, 0.5, 10);
+createWall(15, -10, 10, 0.5);
 
 // ===== ДВЕРИ =====
 const door1 = new THREE.Mesh(
@@ -100,13 +110,10 @@ door2.position.set(0, 1.25, -10);
 door2.castShadow = true;
 scene.add(door2);
 
-// ===== МЕБЕЛЬ =====
-
 // ===== СТОЛ =====
 function createTable(x, z, rotY = 0) {
     const group = new THREE.Group();
 
-    // Столешница
     const top = new THREE.Mesh(
         new THREE.BoxGeometry(2, 0.1, 1),
         woodMaterial
@@ -116,7 +123,6 @@ function createTable(x, z, rotY = 0) {
     top.receiveShadow = true;
     group.add(top);
 
-    // 4 ножки
     const legPositions = [
         [-0.9, 0, -0.4],
         [0.9, 0, -0.4],
@@ -141,11 +147,11 @@ function createTable(x, z, rotY = 0) {
     walls.push({ x, z, width: 2, depth: 1 });
 }
 
-// ===== СТУЛ =====
+// ===== ОФИСНЫЙ СТУЛ НА КОЛЁСИКАХ =====
 function createChair(x, z, rotY = 0) {
     const group = new THREE.Group();
 
-    // ===== СИДЕНЬЕ =====
+    // Сиденье
     const seat = new THREE.Mesh(
         new THREE.BoxGeometry(0.7, 0.15, 0.7),
         new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
@@ -154,7 +160,7 @@ function createChair(x, z, rotY = 0) {
     seat.castShadow = true;
     group.add(seat);
 
-    // ===== СПИНКА =====
+    // Спинка
     const back = new THREE.Mesh(
         new THREE.BoxGeometry(0.7, 0.8, 0.12),
         new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
@@ -163,7 +169,7 @@ function createChair(x, z, rotY = 0) {
     back.castShadow = true;
     group.add(back);
 
-    // ===== ПОДГОЛОВНИК =====
+    // Подголовник
     const headrest = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 0.15, 0.1),
         new THREE.MeshStandardMaterial({ color: 0x2a2a2a })
@@ -172,7 +178,7 @@ function createChair(x, z, rotY = 0) {
     headrest.castShadow = true;
     group.add(headrest);
 
-    // ===== ЦЕНТРАЛЬНАЯ НОГА =====
+    // Центральная нога
     const legMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
     const leg = new THREE.Mesh(
         new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8),
@@ -182,7 +188,7 @@ function createChair(x, z, rotY = 0) {
     leg.castShadow = true;
     group.add(leg);
 
-    // ===== КРЕСТОВИНА (5 спиц) =====
+    // 5 спиц
     for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2;
         const spoke = new THREE.Mesh(
@@ -199,7 +205,7 @@ function createChair(x, z, rotY = 0) {
         group.add(spoke);
     }
 
-    // ===== КОЛЁСИКИ =====
+    // 5 колёсиков
     const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
     for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2;
@@ -226,7 +232,6 @@ function createChair(x, z, rotY = 0) {
 function createCooler(x, z) {
     const group = new THREE.Group();
 
-    // Основание
     const base = new THREE.Mesh(
         new THREE.CylinderGeometry(0.3, 0.3, 1, 16),
         metalMaterial
@@ -235,7 +240,6 @@ function createCooler(x, z) {
     base.castShadow = true;
     group.add(base);
 
-    // Бутылка
     const bottle = new THREE.Mesh(
         new THREE.CylinderGeometry(0.25, 0.25, 0.6, 16),
         waterMaterial
@@ -252,7 +256,7 @@ function createCooler(x, z) {
 
 // ===== РАССТАНОВКА МЕБЕЛИ =====
 
-// ===== КОМНАТА 1 (старт) =====
+// Комната 1 (старт)
 createTable(-2, -2);
 createTable(2, -2);
 createChair(-2, -0.5, Math.PI);
@@ -261,7 +265,7 @@ createChair(-3, -2, Math.PI / 2);
 createChair(3, -2, -Math.PI / 2);
 createCooler(4, 4);
 
-// ===== КОМНАТА 2 (справа) =====
+// Комната 2 (справа)
 createTable(13, -2);
 createTable(17, -2);
 createTable(15, 2);
@@ -271,7 +275,7 @@ createChair(15, 3.5, Math.PI);
 createChair(15, 2, Math.PI / 2);
 createCooler(19, 4);
 
-// ===== КОМНАТА 3 (снизу) =====
+// Комната 3 (снизу)
 createTable(-2, -17);
 createTable(2, -17);
 createChair(-2, -15.5, Math.PI);
@@ -280,7 +284,7 @@ createChair(-3, -17, Math.PI / 2);
 createChair(3, -17, -Math.PI / 2);
 createCooler(4, -19);
 
-// ===== КОМНАТА 4 (снизу-справа) =====
+// Комната 4 (снизу-справа)
 createTable(13, -17);
 createTable(17, -17);
 createChair(13, -15.5, Math.PI);
