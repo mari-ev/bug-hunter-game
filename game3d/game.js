@@ -33,6 +33,14 @@ scene.add(dirLight);
 const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
 const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
 const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x5a3a1a });
+const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x4a3a2a });
+const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
+const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
+const waterMaterial = new THREE.MeshStandardMaterial({
+    color: 0x4a90d9,
+    transparent: true,
+    opacity: 0.7
+});
 
 // ===== ПОЛ =====
 const floorGeometry = new THREE.PlaneGeometry(40, 40);
@@ -41,9 +49,8 @@ floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 scene.add(floor);
 
-// ===== СТЕНЫ И ДВЕРИ =====
+// ===== СТЕНЫ =====
 const walls = [];
-const doors = [];
 
 function createWall(x, z, width, depth) {
     const geometry = new THREE.BoxGeometry(width, 3, depth);
@@ -52,30 +59,27 @@ function createWall(x, z, width, depth) {
     wall.castShadow = true;
     wall.receiveShadow = true;
     scene.add(wall);
-    walls.push({ mesh: wall, x, z, width, depth });
+    walls.push({ x, z, width, depth });
 }
 
-// ===== СОЗДАЁМ КОМНАТЫ =====
-// Комната 1 (стартовая) — центр (0, 0)
-createWall(0, -5, 10, 0.5);      // задняя
-createWall(-5, 0, 0.5, 10);      // левая
-createWall(5, 0, 0.5, 10);       // правая
-createWall(0, 5, 4, 0.5);        // передняя (с дырой под дверь)
+// Комната 1 (стартовая)
+createWall(0, -5, 10, 0.5);
+createWall(-5, 0, 0.5, 10);
+createWall(5, 0, 0.5, 10);
+createWall(0, 5, 4, 0.5);
 
-// Комната 2 (справа) — центр (15, 0)
-createWall(15, -5, 10, 0.5);     // задняя
-createWall(10, 0, 0.5, 10);      // левая (общая со стеной комнаты 1)
-createWall(20, 0, 0.5, 10);      // правая
-createWall(15, 5, 10, 0.5);      // передняя
+// Комната 2 (справа)
+createWall(15, -5, 10, 0.5);
+createWall(20, 0, 0.5, 10);
+createWall(15, 5, 10, 0.5);
 
-// Комната 3 (снизу) — центр (0, -15)
-createWall(0, -20, 10, 0.5);     // задняя
-createWall(-5, -15, 0.5, 10);    // левая
-createWall(5, -15, 0.5, 10);     // правая
-createWall(0, -10, 4, 0.5);      // передняя (с дырой)
+// Комната 3 (снизу)
+createWall(0, -20, 10, 0.5);
+createWall(-5, -15, 0.5, 10);
+createWall(5, -15, 0.5, 10);
+createWall(0, -10, 4, 0.5);
 
-// Коридор между комнатами (двери)
-// Дверь между комнатой 1 и 2
+// ===== ДВЕРИ =====
 const door1 = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 2.5, 3),
     doorMaterial
@@ -84,7 +88,6 @@ door1.position.set(10, 1.25, 0);
 door1.castShadow = true;
 scene.add(door1);
 
-// Дверь между комнатой 1 и 3
 const door2 = new THREE.Mesh(
     new THREE.BoxGeometry(3, 2.5, 0.3),
     doorMaterial
@@ -92,6 +95,145 @@ const door2 = new THREE.Mesh(
 door2.position.set(0, 1.25, -10);
 door2.castShadow = true;
 scene.add(door2);
+
+// ===== МЕБЕЛЬ =====
+
+// ===== СТОЛ =====
+function createTable(x, z, rotY = 0) {
+    const group = new THREE.Group();
+
+    // Столешница
+    const top = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 0.1, 1),
+        woodMaterial
+    );
+    top.position.y = 1;
+    top.castShadow = true;
+    top.receiveShadow = true;
+    group.add(top);
+
+    // 4 ножки
+    const legPositions = [
+        [-0.9, 0, -0.4],
+        [0.9, 0, -0.4],
+        [-0.9, 0, 0.4],
+        [0.9, 0, 0.4]
+    ];
+
+    legPositions.forEach(([lx, ly, lz]) => {
+        const leg = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 1, 0.1),
+            darkMaterial
+        );
+        leg.position.set(lx, 0.5, lz);
+        leg.castShadow = true;
+        group.add(leg);
+    });
+
+    group.position.set(x, 0, z);
+    group.rotation.y = rotY;
+    scene.add(group);
+
+    walls.push({ x, z, width: 2, depth: 1 });
+}
+
+// ===== СТУЛ =====
+function createChair(x, z, rotY = 0) {
+    const group = new THREE.Group();
+
+    // Сиденье
+    const seat = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6, 0.1, 0.6),
+        woodMaterial
+    );
+    seat.position.y = 0.5;
+    seat.castShadow = true;
+    group.add(seat);
+
+    // Спинка
+    const back = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6, 0.8, 0.1),
+        woodMaterial
+    );
+    back.position.set(0, 0.9, -0.25);
+    back.castShadow = true;
+    group.add(back);
+
+    // 4 ножки
+    const legPositions = [
+        [-0.25, 0, -0.25],
+        [0.25, 0, -0.25],
+        [-0.25, 0, 0.25],
+        [0.25, 0, 0.25]
+    ];
+
+    legPositions.forEach(([lx, ly, lz]) => {
+        const leg = new THREE.Mesh(
+            new THREE.BoxGeometry(0.05, 0.5, 0.05),
+            darkMaterial
+        );
+        leg.position.set(lx, 0.25, lz);
+        leg.castShadow = true;
+        group.add(leg);
+    });
+
+    group.position.set(x, 0, z);
+    group.rotation.y = rotY;
+    scene.add(group);
+}
+
+// ===== КУЛЕР =====
+function createCooler(x, z) {
+    const group = new THREE.Group();
+
+    // Основание
+    const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.3, 1, 16),
+        metalMaterial
+    );
+    base.position.y = 0.5;
+    base.castShadow = true;
+    group.add(base);
+
+    // Бутылка
+    const bottle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25, 0.25, 0.6, 16),
+        waterMaterial
+    );
+    bottle.position.y = 1.3;
+    bottle.castShadow = true;
+    group.add(bottle);
+
+    group.position.set(x, 0, z);
+    scene.add(group);
+
+    walls.push({ x, z, width: 0.6, depth: 0.6 });
+}
+
+// ===== РАССТАНОВКА МЕБЕЛИ =====
+
+// Комната 1 — офис
+createTable(-2, -2);
+createTable(2, -2);
+createChair(-2, -0.5, Math.PI);
+createChair(2, -0.5, Math.PI);
+createChair(-3, -2, Math.PI / 2);
+createChair(3, -2, -Math.PI / 2);
+createCooler(4, 4);
+
+// Комната 2 — офис
+createTable(14, -2);
+createTable(17, -2);
+createChair(14, -0.5, Math.PI);
+createChair(17, -0.5, Math.PI);
+createCooler(19, 4);
+
+// Комната 3 — офис
+createTable(-2, -17);
+createTable(2, -17);
+createChair(-2, -15.5, Math.PI);
+createChair(2, -15.5, Math.PI);
+createCooler(4, -19);
 
 // ===== ПЕРСОНАЖ =====
 const playerTexture = new THREE.TextureLoader().load('assets/player.png');
@@ -121,11 +263,9 @@ function spawnBug(x, z) {
     bug.position.set(x, 0.4, z);
     bug.castShadow = true;
     scene.add(bug);
-
     bugs.push({ mesh: bug, alive: true });
 }
 
-// Жуки в разных комнатах
 spawnBug(2, -2);
 spawnBug(-3, 2);
 spawnBug(15, 2);
@@ -175,7 +315,6 @@ function onTap(clientX, clientY) {
 
     raycaster.setFromCamera(mouse, camera);
 
-    // Проверка попадания в жуков
     const bugMeshes = bugs.filter(b => b.alive).map(b => b.mesh);
     const bugIntersects = raycaster.intersectObjects(bugMeshes);
 
@@ -185,7 +324,6 @@ function onTap(clientX, clientY) {
         return;
     }
 
-    // Проверка попадания в пол
     const floorIntersects = raycaster.intersectObject(floor);
     if (floorIntersects.length > 0) {
         const point = floorIntersects[0].point;
@@ -201,7 +339,7 @@ renderer.domElement.addEventListener('touchstart', (e) => {
     onTap(touch.clientX, touch.clientY);
 }, { passive: false });
 
-// ===== СТОЛКНОВЕНИЯ СО СТЕНАМИ =====
+// ===== СТОЛКНОВЕНИЯ =====
 function canMoveTo(x, z) {
     const playerRadius = 0.5;
 
@@ -243,7 +381,6 @@ function updatePlayer() {
         }
     }
 
-    // Проверка столкновений (раздельно по X и Z)
     if (canMoveTo(newX, player.position.z)) {
         player.position.x = newX;
     }
@@ -251,7 +388,6 @@ function updatePlayer() {
         player.position.z = newZ;
     }
 
-    // Спрайт всегда смотрит на камеру (без наклона)
     player.lookAt(camera.position.x, player.position.y, camera.position.z);
     player.rotation.x = 0;
     player.rotation.z = 0;
