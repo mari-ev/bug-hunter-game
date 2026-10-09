@@ -141,41 +141,77 @@ function createTable(x, z, rotY = 0) {
 function createChair(x, z, rotY = 0) {
     const group = new THREE.Group();
 
-    // Сиденье
+    // ===== СИДЕНЬЕ =====
     const seat = new THREE.Mesh(
-        new THREE.BoxGeometry(0.6, 0.1, 0.6),
-        woodMaterial
+        new THREE.BoxGeometry(0.7, 0.15, 0.7),
+        new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
     );
     seat.position.y = 0.5;
     seat.castShadow = true;
     group.add(seat);
 
-    // Спинка
+    // ===== СПИНКА =====
     const back = new THREE.Mesh(
-        new THREE.BoxGeometry(0.6, 0.8, 0.1),
-        woodMaterial
+        new THREE.BoxGeometry(0.7, 0.8, 0.12),
+        new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
     );
-    back.position.set(0, 0.9, -0.25);
+    back.position.set(0, 0.9, -0.3);
     back.castShadow = true;
     group.add(back);
 
-    // 4 ножки
-    const legPositions = [
-        [-0.25, 0, -0.25],
-        [0.25, 0, -0.25],
-        [-0.25, 0, 0.25],
-        [0.25, 0, 0.25]
-    ];
+    // ===== ПОДГОЛОВНИК =====
+    const headrest = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.15, 0.1),
+        new THREE.MeshStandardMaterial({ color: 0x2a2a2a })
+    );
+    headrest.position.set(0, 1.4, -0.3);
+    headrest.castShadow = true;
+    group.add(headrest);
 
-    legPositions.forEach(([lx, ly, lz]) => {
-        const leg = new THREE.Mesh(
-            new THREE.BoxGeometry(0.05, 0.5, 0.05),
-            darkMaterial
+    // ===== ЦЕНТРАЛЬНАЯ НОГА =====
+    const legMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
+    const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8),
+        legMaterial
+    );
+    leg.position.y = 0.25;
+    leg.castShadow = true;
+    group.add(leg);
+
+    // ===== КРЕСТОВИНА (5 спиц) =====
+    for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const spoke = new THREE.Mesh(
+            new THREE.BoxGeometry(0.35, 0.05, 0.08),
+            legMaterial
         );
-        leg.position.set(lx, 0.25, lz);
-        leg.castShadow = true;
-        group.add(leg);
-    });
+        spoke.position.set(
+            Math.cos(angle) * 0.2,
+            0.07,
+            Math.sin(angle) * 0.2
+        );
+        spoke.rotation.y = -angle;
+        spoke.castShadow = true;
+        group.add(spoke);
+    }
+
+    // ===== КОЛЁСИКИ =====
+    const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const wheel = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.06, 0.06, 0.04, 8),
+            wheelMaterial
+        );
+        wheel.position.set(
+            Math.cos(angle) * 0.35,
+            0.04,
+            Math.sin(angle) * 0.35
+        );
+        wheel.rotation.z = Math.PI / 2;
+        wheel.rotation.y = -angle;
+        group.add(wheel);
+    }
 
     group.position.set(x, 0, z);
     group.rotation.y = rotY;
