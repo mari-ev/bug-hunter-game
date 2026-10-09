@@ -43,7 +43,7 @@ const waterMaterial = new THREE.MeshStandardMaterial({
 });
 
 // ===== ПОЛ =====
-const floorGeometry = new THREE.PlaneGeometry(40, 40);
+const floorGeometry = new THREE.PlaneGeometry(60, 60);
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
