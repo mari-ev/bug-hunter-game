@@ -42,10 +42,25 @@ const waterMaterial = new THREE.MeshStandardMaterial({
     opacity: 0.7
 });
 
-// ===== ПОЛ =====
-const floorGeometry = new THREE.PlaneGeometry(60, 60);
+// ===== ГРАНИЦЫ МИРА (для пола и стен) =====
+const WORLD = {
+    minX: -20,
+    maxX: 20,
+    minZ: -25,
+    maxZ: 22.5
+};
+
+const worldWidth = WORLD.maxX - WORLD.minX;   // 40
+const worldDepth = WORLD.maxZ - WORLD.minZ;   // 47.5
+const worldCenterX = (WORLD.minX + WORLD.maxX) / 2;  // 0
+const worldCenterZ = (WORLD.minZ + WORLD.maxZ) / 2;  // -1.25
+
+// ===== ПОЛ (ровно по стенам) =====
+const floorGeometry = new THREE.PlaneGeometry(worldWidth, worldDepth);
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
+floor.position.x = worldCenterX;
+floor.position.z = worldCenterZ;
 floor.receiveShadow = true;
 scene.add(floor);
 
@@ -63,11 +78,11 @@ function createWall(x, z, width, depth) {
     walls.push({ x, z, width, depth });
 }
 
-// ===== ВНЕШНИЕ СТЕНЫ (большая комната) =====
-createWall(0, -25, 40, 0.5);       // задняя внешняя
-createWall(0, 20, 40, 0.5);        // передняя внешняя
-createWall(-20, -2.5, 0.5, 45);    // левая внешняя
-createWall(20, -2.5, 0.5, 45);     // правая внешняя
+// ===== ВНЕШНИЕ СТЕНЫ (ровно по краям пола) =====
+createWall(worldCenterX, WORLD.minZ, worldWidth, 0.5);  // задняя
+createWall(worldCenterX, WORLD.maxZ, worldWidth, 0.5);  // передняя
+createWall(WORLD.minX, worldCenterZ, 0.5, worldDepth);  // левая
+createWall(WORLD.maxX, worldCenterZ, 0.5, worldDepth);  // правая
 
 // ===== ВНУТРЕННИЕ СТЕНЫ (комнаты) =====
 
@@ -151,7 +166,6 @@ function createTable(x, z, rotY = 0) {
 function createChair(x, z, rotY = 0) {
     const group = new THREE.Group();
 
-    // Сиденье
     const seat = new THREE.Mesh(
         new THREE.BoxGeometry(0.7, 0.15, 0.7),
         new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
@@ -160,7 +174,6 @@ function createChair(x, z, rotY = 0) {
     seat.castShadow = true;
     group.add(seat);
 
-    // Спинка
     const back = new THREE.Mesh(
         new THREE.BoxGeometry(0.7, 0.8, 0.12),
         new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
@@ -169,7 +182,6 @@ function createChair(x, z, rotY = 0) {
     back.castShadow = true;
     group.add(back);
 
-    // Подголовник
     const headrest = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 0.15, 0.1),
         new THREE.MeshStandardMaterial({ color: 0x2a2a2a })
@@ -178,7 +190,6 @@ function createChair(x, z, rotY = 0) {
     headrest.castShadow = true;
     group.add(headrest);
 
-    // Центральная нога
     const legMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
     const leg = new THREE.Mesh(
         new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8),
@@ -188,7 +199,6 @@ function createChair(x, z, rotY = 0) {
     leg.castShadow = true;
     group.add(leg);
 
-    // 5 спиц
     for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2;
         const spoke = new THREE.Mesh(
@@ -205,7 +215,6 @@ function createChair(x, z, rotY = 0) {
         group.add(spoke);
     }
 
-    // 5 колёсиков
     const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
     for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2;
@@ -256,7 +265,7 @@ function createCooler(x, z) {
 
 // ===== РАССТАНОВКА МЕБЕЛИ =====
 
-// Комната 1 (старт)
+// Комната 1
 createTable(-2, -2);
 createTable(2, -2);
 createChair(-2, -0.5, Math.PI);
@@ -265,7 +274,7 @@ createChair(-3, -2, Math.PI / 2);
 createChair(3, -2, -Math.PI / 2);
 createCooler(4, 4);
 
-// Комната 2 (справа)
+// Комната 2
 createTable(13, -2);
 createTable(17, -2);
 createTable(15, 2);
@@ -275,7 +284,7 @@ createChair(15, 3.5, Math.PI);
 createChair(15, 2, Math.PI / 2);
 createCooler(19, 4);
 
-// Комната 3 (снизу)
+// Комната 3
 createTable(-2, -17);
 createTable(2, -17);
 createChair(-2, -15.5, Math.PI);
@@ -284,7 +293,7 @@ createChair(-3, -17, Math.PI / 2);
 createChair(3, -17, -Math.PI / 2);
 createCooler(4, -19);
 
-// Комната 4 (снизу-справа)
+// Комната 4
 createTable(13, -17);
 createTable(17, -17);
 createChair(13, -15.5, Math.PI);
