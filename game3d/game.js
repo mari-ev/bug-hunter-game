@@ -484,7 +484,7 @@ function updatePlayer() {
 
     player.lookAt(camera.position.x, player.position.y, camera.position.z);
     player.rotation.x = 0;
-    player.rotation.z =  **0;
+    player.rotation.z =  0;
 }
 
 // ===== ДВЕРИ (открывание) =====
