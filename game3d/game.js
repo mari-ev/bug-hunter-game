@@ -84,44 +84,30 @@ createWall(worldCenterX, WORLD.maxZ, worldWidth, 0.5);
 createWall(WORLD.minX, worldCenterZ, 0.5, worldDepth);
 createWall(WORLD.maxX, worldCenterZ, 0.5, worldDepth);
 
-// ===== КОРИДОР (по центру, между дальними и ближними комнатами) =====
-// Коридор: z от -3 до 3, x от -22 до 22
-// Стены коридора — сверху (z=-3) и снизу (z=3)
+// ===== СТЕНЫ ВЕРХНИХ КОМНАТ (A, B, C) =====
+// Разделители между верхними комнатами (вертикальные)
+createWall(-7.5, -14.5, 0.5, 23);    // между A и B
+createWall(7.5, -14.5, 0.5, 23);     // между B и C
 
-// Верхняя стена коридора (z=-3), разбита на 4 части — между ними двери
-// Комнаты сверху: A (x -22..-7), B (x -7..7), C (x 7..22)
-// Двери в комнаты: x=-7, x=7, и по краям
+// Стены между верхними комнатами и коридором (z=-3)
+// Дыры под двери: A (x=-15), B (x=0), C (x=15)
+createWall(-18.5, -3, 7, 0.5);       // от -22 до -15
+createWall(-7.5, -3, 15, 0.5);       // от -15 до 0
+createWall(7.5, -3, 15, 0.5);        // от 0 до 15
+createWall(18.5, -3, 7, 0.5);        // от 15 до 22
 
-// Верхняя стена коридора
-createWall(-14, -3, 16, 0.5);   // от -22 до -6
-createWall(0, -3, 0.5, 0.5);    // маленький столб между дверьми A и B? нет, пропустим
-createWall(14, -3, 16, 0.5);    // от 6 до 22
+// ===== СТЕНЫ НИЖНИХ КОМНАТ (D, E, F) =====
+// Разделители между нижними комнатами
+createWall(-7.5, 14.5, 0.5, 23);     // между D и E
+createWall(7.5, 14.5, 0.5, 23);      // между E и F
 
-// Нижняя стена коридора (z=3)
-createWall(-14, 3, 16, 0.5);    // от -22 до -6
-createWall(14, 3, 16, 0.5);     // от 6 до 22
+// Стены между нижними комнатами и коридором (z=3)
+createWall(-18.5, 3, 7, 0.5);        // от -22 до -15
+createWall(-7.5, 3, 15, 0.5);        // от -15 до 0
+createWall(7.5, 3, 15, 0.5);         // от 0 до 15
+createWall(18.5, 3, 7, 0.5);         // от 15 до 22
 
-// ===== СТЕНЫ КОМНАТ =====
-
-// ===== ВЕРХНИЕ КОМНАТЫ (A, B, C) =====
-// Комната A: x -22..-7, z -26..-3
-createWall(-14.5, -14.5, 15, 0.5);   // между A и B (x=-7)
-createWall(-7, -26, 0.5, 23);        // стена между A и B
-
-// Комната B: x -7..7, z -26..-3
-createWall(7, -26, 0.5, 23);         // стена между B и C
-
-// Комната C: x 7..22, z -26..-3 (внешняя правая уже есть)
-
-// Горизонтальные стены между верхними комнатами и коридором (z=-3)
-// Двери в верхние комнаты: x=-14 (A), x=0 (B), x=14 (C)
-// Стена коридора уже создана, надо сделать отверстия под двери
-
-// ===== НИЖНИЕ КОМНАТЫ (D, E, F) =====
-createWall(-7, -14.5, 0.5, 23);      // стена между D и E (продолжение)
-createWall(7, -14.5, 0.5, 23);       // стена между E и F
-
-// ===== ДВЕРИ (все вертикальные, петли справа) =====
+// ===== ДВЕРИ =====
 const doors = [];
 
 function createDoor(x, z, width, height, depth, rotY = 0) {
@@ -150,24 +136,14 @@ function createDoor(x, z, width, height, depth, rotY = 0) {
     return doorData;
 }
 
-// ===== ДВЕРИ ВЕРХНИХ КОМНАТ =====
-// Дверь в комнату A (в стене z=-3, x=-14)
-createDoor(-13, -3, 3, 2.5, 0.3, 0);
-
-// Дверь в комнату B (в стене z=-3, x=0)
-createDoor(1, -3, 3, 2.5, 0.3, 0);
-
-// Дверь в комнату C (в стене z=-3, x=14)
+// Верхние комнаты (двери в стене z=-3)
+createDoor(-15, -3, 3, 2.5, 0.3, 0);
+createDoor(0, -3, 3, 2.5, 0.3, 0);
 createDoor(15, -3, 3, 2.5, 0.3, 0);
 
-// ===== ДВЕРИ НИЖНИХ КОМНАТ =====
-// Дверь в комнату D (в стене z=3, x=-14)
-createDoor(-13, 3, 3, 2.5, 0.3, 0);
-
-// Дверь в комнату E (в стене z=3, x=0)
-createDoor(1, 3, 3, 2.5, 0.3, 0);
-
-// Дверь в комнату F (в стене z=3, x=14)
+// Нижние комнаты (двери в стене z=3)
+createDoor(-15, 3, 3, 2.5, 0.3, 0);
+createDoor(0, 3, 3, 2.5, 0.3, 0);
 createDoor(15, 3, 3, 2.5, 0.3, 0);
 
 // ===== СТОЛ =====
@@ -308,26 +284,24 @@ function createCooler(x, z) {
     walls.push({ x, z, width: 0.6, depth: 0.6 });
 }
 
-// ===== РАССТАНОВКА МЕБЕЛИ (одинаково в каждой комнате) =====
+// ===== РАССТАНОВКА МЕБЕЛИ =====
 function fillRoom(centerX, centerZ) {
-    createTable(centerX - 3, centerZ - 3);
-    createTable(centerX + 3, centerZ - 3);
-    createChair(centerX - 3, centerZ - 1.5, Math.PI);
-    createChair(centerX + 3, centerZ - 1.5, Math.PI);
-    createChair(centerX - 4, centerZ - 3, Math.PI / 2);
-    createChair(centerX + 4, centerZ - 3, -Math.PI / 2);
+    createTable(centerX - 3, centerZ - 2);
+    createTable(centerX + 3, centerZ - 2);
+    createChair(centerX - 3, centerZ - 0.5, Math.PI);
+    createChair(centerX + 3, centerZ - 0.5, Math.PI);
     createCooler(centerX + 5, centerZ + 5);
 }
 
-// Верхние комнаты
-fillRoom(-14.5, -14.5);   // A
-fillRoom(0, -14.5);       // B
-fillRoom(14.5, -14.5);    // C
+// Верхние
+fillRoom(-15, -14.5);
+fillRoom(0, -14.5);
+fillRoom(15, -14.5);
 
-// Нижние комнаты
-fillRoom(-14.5, 14.5);    // D
-fillRoom(0, 14.5);        // E
-fillRoom(14.5, 14.5);     // F
+// Нижние
+fillRoom(-15, 14.5);
+fillRoom(0, 14.5);
+fillRoom(15, 14.5);
 
 // ===== ПЕРСОНАЖ =====
 const playerTexture = new THREE.TextureLoader().load('assets/player.png');
@@ -361,13 +335,13 @@ function spawnBug(x, z) {
 }
 
 // Жуки в разных комнатах
-spawnBug(-14.5, -14.5);
+spawnBug(-15, -14.5);
 spawnBug(0, -14.5);
-spawnBug(14.5, -14.5);
-spawnBug(-14.5, 14.5);
+spawnBug(15, -14.5);
+spawnBug(-15, 14.5);
 spawnBug(0, 14.5);
-spawnBug(14.5, 14.5);
-spawnBug(0, 0);   // в коридоре
+spawnBug(15, 14.5);
+spawnBug(0, 0);
 
 // ===== ПУЛИ =====
 const bullets = [];
