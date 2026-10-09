@@ -86,32 +86,32 @@ createWall(WORLD.maxX, worldCenterZ, 0.5, worldDepth);
 
 // ===== ВНУТРЕННИЕ СТЕНЫ =====
 
-// ===== КОМНАТА 1 (старт) =====
-createWall(0, -5, 10, 0.5);          // задняя
-createWall(-5, 0, 0.5, 10);          // левая
-createWall(5, -3.25, 0.5, 3.5);      // правая (верхняя часть)
-createWall(5, 3.25, 0.5, 3.5);       // правая (нижняя часть)
-createWall(0, 5, 4, 0.5);            // передняя (с дырой)
+// Комната 1 (старт)
+createWall(0, -5, 10, 0.5);
+createWall(-5, 0, 0.5, 10);
+createWall(5, -3.25, 0.5, 3.5);
+createWall(5, 3.25, 0.5, 3.5);
+createWall(0, 5, 4, 0.5);
 
-// ===== КОМНАТА 2 (справа) =====
-createWall(10, -3.25, 0.5, 3.5);     // левая (верхняя)
-createWall(10, 3.25, 0.5, 3.5);      // левая (нижняя)
-createWall(15, -5, 10, 0.5);         // задняя
-createWall(20, 0, 0.5, 10);          // правая
-createWall(15, 5, 10, 0.5);          // передняя
+// Комната 2 (справа)
+createWall(10, -3.25, 0.5, 3.5);
+createWall(10, 3.25, 0.5, 3.5);
+createWall(15, -5, 10, 0.5);
+createWall(20, 0, 0.5, 10);
+createWall(15, 5, 10, 0.5);
 
-// ===== КОМНАТА 3 (снизу) =====
-createWall(-3.25, -10, 3.5, 0.5);    // передняя (левая)
-createWall(3.25, -10, 3.5, 0.5);     // передняя (правая)
-createWall(0, -20, 10, 0.5);         // задняя
-createWall(-5, -15, 0.5, 10);        // левая
-createWall(5, -15, 0.5, 10);         // правая
+// Комната 3 (снизу)
+createWall(-3.25, -10, 3.5, 0.5);
+createWall(3.25, -10, 3.5, 0.5);
+createWall(0, -20, 10, 0.5);
+createWall(-5, -15, 0.5, 10);
+createWall(5, -15, 0.5, 10);
 
-// ===== КОМНАТА 4 (снизу-справа) =====
-createWall(10, -15, 0.5, 10);        // левая
-createWall(15, -20, 10, 0.5);        // задняя
-createWall(20, -15, 0.5, 10);        // правая
-createWall(15, -10, 10, 0.5);        // передняя
+// Комната 4 (снизу-справа)
+createWall(10, -15, 0.5, 10);
+createWall(15, -20, 10, 0.5);
+createWall(20, -15, 0.5, 10);
+createWall(15, -10, 10, 0.5);
 
 // ===== ДВЕРИ (открывающиеся, петли СПРАВА) =====
 const doors = [];
@@ -119,8 +119,7 @@ const doors = [];
 function createDoor(x, z, width, height, depth, rotY = 0) {
     const group = new THREE.Group();
 
-    // Меш двери — смещён ВЛЕВО от точки петли
-    // (петля справа, поэтому дверь "висит" слева от группы)
+    // Меш двери — смещён ВЛЕВО от точки петли (по локальной оси X)
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const door = new THREE.Mesh(geometry, doorMaterial);
     door.position.x = -width / 2;
@@ -145,11 +144,13 @@ function createDoor(x, z, width, height, depth, rotY = 0) {
     return doorData;
 }
 
-// Дверь между комнатой 1 и 2 (петля на правом краю, z=1.5)
+// ===== ДВЕРИ =====
+
+// Вертикальная дверь (между 1 и 2) — петля справа
 createDoor(10, 1.5, 0.3, 2.5, 3, 0);
 
-// Дверь между комнатой 1 и 3 (петля на правом краю, x=1.5)
-createDoor(1.5, -10, 3, 2.5, 0.3, 0);
+// Горизонтальная дверь (между 1 и 3) — повёрнута на 90°
+createDoor(1.5, -10, 0.3, 2.5, 3, Math.PI / 2);
 
 // ===== СТОЛ =====
 function createTable(x, z, rotY = 0) {
@@ -315,7 +316,7 @@ createTable(-2, -17);
 createTable(2, -17);
 createChair(-2, -15.5, Math.PI);
 createChair(2, -15.5, Math.PI);
-createChair(-3, -17, Math.PI / 2);
+createChair(-3, - |17, Math.PI / 2);
 createChair(3, -17, -Math.PI / 2);
 createCooler(4, -19);
 
@@ -472,10 +473,8 @@ function updatePlayer() {
         }
     }
 
-    // Двери открываются автоматически
     updateDoors(newX, newZ);
 
-    // Коллизии
     if (canMoveTo(newX, player.position.z)) {
         player.position.x = newX;
     }
@@ -485,15 +484,14 @@ function updatePlayer() {
 
     player.lookAt(camera.position.x, player.position.y, camera.position.z);
     player.rotation.x = 0;
-    player.rotation.z = 0;
+    player.rotation.z =  **0;
 }
 
-// ===== ДВЕРИ (открывание, петли СПРАВА) =====
+// ===== ДВЕРИ (открывание) =====
 function updateDoors(playerX, playerZ) {
     const triggerDistance = 3;
 
     doors.forEach(doorData => {
-        // Точка петли — позиция группы (правый край двери)
         const pivotX = doorData.group.position.x;
         const pivotZ = doorData.group.position.z;
 
@@ -506,8 +504,8 @@ function updateDoors(playerX, playerZ) {
         const targetAmount = doorData.open ? 1 : 0;
         doorData.openAmount += (targetAmount - doorData.openAmount) * 0.1;
 
-        // Открываем: поворот вокруг правой петли (левый край отходит)
-        const angle = doorData.openAmount * Math.PI / 2;
+        // Открываем на 72°
+        const angle = doorData.openAmount * Math.PI * 0.4;
         doorData.group.rotation.y = doorData.rotY + angle;
     });
 }
