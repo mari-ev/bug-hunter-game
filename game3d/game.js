@@ -50,34 +50,38 @@ floor.receiveShadow = true;
 scene.add(floor);
 
 // ===== СТЕНЫ =====
-const walls = [];
 
-function createWall(x, z, width, depth) {
-    const geometry = new THREE.BoxGeometry(width, 3, depth);
-    const wall = new THREE.Mesh(geometry, wallMaterial);
-    wall.position.set(x, 1.5, z);
-    wall.castShadow = true;
-    wall.receiveShadow = true;
-    scene.add(wall);
-    walls.push({ x, z, width, depth });
-}
+// ===== СТЕНЫ =====
 
-// Комната 1 (стартовая)
-createWall(0, -5, 10, 0.5);
-createWall(-5, 0, 0.5, 10);
-createWall(5, 0, 0.5, 10);
-createWall(0, 5, 4, 0.5);
+// ===== ВНЕШНИЕ СТЕНЫ (большая комната 30×30) =====
+createWall(0, -25, 40, 0.5);       // задняя внешняя
+createWall(0, 20, 40, 0.5);        // передняя внешняя
+createWall(-20, -2.5, 0.5, 45);    // левая внешняя
+createWall(20, -2.5, 0.5, 45);     // правая внешняя
 
-// Комната 2 (справа)
-createWall(15, -5, 10, 0.5);
-createWall(20, 0, 0.5, 10);
-createWall(15, 5, 10, 0.5);
+// ===== ВНУТРЕННИЕ СТЕНЫ (комнаты) =====
 
-// Комната 3 (снизу)
-createWall(0, -20, 10, 0.5);
-createWall(-5, -15, 0.5, 10);
-createWall(5, -15, 0.5, 10);
-createWall(0, -10, 4, 0.5);
+// Комната 1 (стартовая, центр 0,0)
+createWall(0, -5, 10, 0.5);        // задняя
+createWall(-5, 0, 0.5, 10);        // левая
+createWall(5, 0, 0.5, 10);         // правая
+createWall(0, 5, 4, 0.5);          // передняя (с дырой под дверь)
+
+// Комната 2 (справа, центр 15,0)
+createWall(15, -5, 10, 0.5);       // задняя
+createWall(20, 0, 0.5, 10);        // правая
+createWall(15, 5, 10, 0.5);        // передняя
+
+// Комната 3 (снизу, центр 0,-15)
+createWall(0, -20, 10, 0.5);       // задняя
+createWall(-5, -15, 0.5, 10);      // левая
+createWall(5, -15, 0.5, 10);       // правая
+createWall(0, -10, 4, 0.5);        // передняя (с дырой)
+
+// Комната 4 (снизу-справа, центр 15,-15)
+createWall(15, -20, 10, 0.5);      // задняя
+createWall(20, -15, 0.5, 10);      // правая
+createWall(15, -10, 10, 0.5);      // передняя
 
 // ===== ДВЕРИ =====
 const door1 = new THREE.Mesh(
@@ -248,7 +252,7 @@ function createCooler(x, z) {
 
 // ===== РАССТАНОВКА МЕБЕЛИ =====
 
-// Комната 1 — офис
+// ===== КОМНАТА 1 (старт) =====
 createTable(-2, -2);
 createTable(2, -2);
 createChair(-2, -0.5, Math.PI);
@@ -257,19 +261,31 @@ createChair(-3, -2, Math.PI / 2);
 createChair(3, -2, -Math.PI / 2);
 createCooler(4, 4);
 
-// Комната 2 — офис
-createTable(14, -2);
+// ===== КОМНАТА 2 (справа) =====
+createTable(13, -2);
 createTable(17, -2);
-createChair(14, -0.5, Math.PI);
+createTable(15, 2);
+createChair(13, -0.5, Math.PI);
 createChair(17, -0.5, Math.PI);
+createChair(15, 3.5, Math.PI);
+createChair(15, 2, Math.PI / 2);
 createCooler(19, 4);
 
-// Комната 3 — офис
+// ===== КОМНАТА 3 (снизу) =====
 createTable(-2, -17);
 createTable(2, -17);
 createChair(-2, -15.5, Math.PI);
 createChair(2, -15.5, Math.PI);
+createChair(-3, -17, Math.PI / 2);
+createChair(3, -17, -Math.PI / 2);
 createCooler(4, -19);
+
+// ===== КОМНАТА 4 (снизу-справа) =====
+createTable(13, -17);
+createTable(17, -17);
+createChair(13, -15.5, Math.PI);
+createChair(17, -15.5, Math.PI);
+createCooler(19, -19);
 
 // ===== ПЕРСОНАЖ =====
 const playerTexture = new THREE.TextureLoader().load('assets/player.png');
