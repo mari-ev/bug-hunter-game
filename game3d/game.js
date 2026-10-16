@@ -36,7 +36,7 @@ const wallInnerMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
 const wallOuterTexture = new THREE.TextureLoader().load('assets/wall-outer.png');
 wallOuterTexture.wrapS = THREE.RepeatWrapping;
 wallOuterTexture.wrapT = THREE.RepeatWrapping;
-wallOuterTexture.repeat.set(4, 1);  // 4 повтора по горизонтали
+wallOuterTexture.repeat.set(4, 1);
 
 const wallOuterMaterial = new THREE.MeshStandardMaterial({
     map: wallOuterTexture
@@ -100,7 +100,6 @@ createWall(WORLD.maxX, worldCenterZ, 0.5, worldDepth, true);
 createWall(-7.5, -14.5, 0.5, 23);
 createWall(7.5, -14.5, 0.5, 23);
 
-// Стены между верхними комнатами и коридором (z=-3)
 createWall(-19.25, -3, 5.5, 0.5);
 createWall(-10.5, -3, 6, 0.5);
 
@@ -287,7 +286,7 @@ function createCooler(x, z) {
     group.add(base);
 
     const bottle = new THREE.Mesh(
-        new THREE0.25, 0.25, 0.6, 16),
+        new THREE.CylinderGeometry(0.25, 0.25, 0.6, 16),
         waterMaterial
     );
     bottle.position.y = 1.3;
@@ -309,12 +308,10 @@ function fillRoom(centerX, centerZ) {
     createCooler(centerX + 5, centerZ + 5);
 }
 
-// Верхние
 fillRoom(-15, -14.5);
 fillRoom(0, -14.5);
 fillRoom(15, -14.5);
 
-// Нижние
 fillRoom(-15, 14.5);
 fillRoom(0, 14.5);
 fillRoom(15, 14.5);
