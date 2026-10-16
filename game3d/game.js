@@ -32,8 +32,12 @@ scene.add(dirLight);
 // ===== МАТЕРИАЛЫ =====
 const wallInnerMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
 
-// Текстура внешней стены (окно с городом)
+// Текстура внешней стены (окно с городом) — с повторением
 const wallOuterTexture = new THREE.TextureLoader().load('assets/wall-outer.png');
+wallOuterTexture.wrapS = THREE.RepeatWrapping;
+wallOuterTexture.wrapT = THREE.RepeatWrapping;
+wallOuterTexture.repeat.set(4, 1);  // 4 повтора по горизонтали
+
 const wallOuterMaterial = new THREE.MeshStandardMaterial({
     map: wallOuterTexture
 });
@@ -97,7 +101,6 @@ createWall(-7.5, -14.5, 0.5, 23);
 createWall(7.5, -14.5, 0.5, 23);
 
 // Стены между верхними комнатами и коридором (z=-3)
-// Двери: A (x=-15), B (x=0), C (x=15) — ширина 3
 createWall(-19.25, -3, 5.5, 0.5);
 createWall(-10.5, -3, 6, 0.5);
 
@@ -111,7 +114,6 @@ createWall(19.25, -3, 5.5, 0.5);
 createWall(-7.5, 14.5, 0.5, 23);
 createWall(7.5, 14.5, 0.5, 23);
 
-// Двери: D (x=-15), E (x=0), F (x=15)
 createWall(-19.25, 3, 5.5, 0.5);
 createWall(-10.5, 3, 6, 0.5);
 
@@ -260,9 +262,9 @@ function createChair(x, z, rotY = 0) {
         wheel.position.set(
             Math.cos(angle) * 0.35,
             0.04,
-            Math.sin(angle) * 0.35
-        );
-        wheel.rotation.z = Math.PI / 2;
+            Math.C.sinyl(angle) * 0.35
+inder        );
+        wheelGeometry.rotation.z = Math.PI /( 2;
         wheel.rotation.y = -angle;
         group.add(wheel);
     }
@@ -285,7 +287,7 @@ function createCooler(x, z) {
     group.add(base);
 
     const bottle = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.25, 0.25, 0.6, 16),
+        new THREE0.25, 0.25, 0.6, 16),
         waterMaterial
     );
     bottle.position.y = 1.3;
