@@ -30,7 +30,14 @@ dirLight.shadow.mapSize.height = 2048;
 scene.add(dirLight);
 
 // ===== МАТЕРИАЛЫ =====
-const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
+const wallInnerMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
+
+// Текстура внешней стены (окно с городом)
+const wallOuterTexture = new THREE.TextureLoader().load('assets/wall-outer.png');
+const wallOuterMaterial = new THREE.MeshStandardMaterial({
+    map: wallOuterTexture
+});
+
 const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
 const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x5a3a1a });
 const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x4a3a2a });
@@ -68,9 +75,10 @@ scene.add(floor);
 const walls = [];
 
 // ===== ФУНКЦИЯ СТЕНЫ =====
-function createWall(x, z, width, depth) {
+function createWall(x, z, width, depth, isOuter = false) {
     const geometry = new THREE.BoxGeometry(width, 3, depth);
-    const wall = new THREE.Mesh(geometry, wallMaterial);
+    const material = isOuter ? wallOuterMaterial : wallInnerMaterial;
+    const wall = new THREE.Mesh(geometry, material);
     wall.position.set(x, 1.5, z);
     wall.castShadow = true;
     wall.receiveShadow = true;
@@ -78,34 +86,40 @@ function createWall(x, z, width, depth) {
     walls.push({ x, z, width, depth });
 }
 
-// ===== ВНЕШНИЕ СТЕНЫ =====
-createWall(worldCenterX, WORLD.minZ, worldWidth, 0.5);
-createWall(worldCenterX, WORLD.maxZ, worldWidth, 0.5);
-createWall(WORLD.minX, worldCenterZ, 0.5, worldDepth);
-createWall(WORLD.maxX, worldCenterZ, 0.5, worldDepth);
+// ===== ВНЕШНИЕ СТЕНЫ (с текстурой окна) =====
+createWall(worldCenterX, WORLD.minZ, worldWidth, 0.5, true);
+createWall(worldCenterX, WORLD.maxZ, worldWidth, 0.5, true);
+createWall(WORLD.minX, worldCenterZ, 0.5, worldDepth, true);
+createWall(WORLD.maxX, worldCenterZ, 0.5, worldDepth, true);
 
 // ===== СТЕНЫ ВЕРХНИХ КОМНАТ (A, B, C) =====
-// Разделители между верхними комнатами (вертикальные)
-createWall(-7.5, -14.5, 0.5, 23);    // между A и B
-createWall(7.5, -14.5, 0.5, 23);     // между B и C
+createWall(-7.5, -14.5, 0.5, 23);
+createWall(7.5, -14.5, 0.5, 23);
 
 // Стены между верхними комнатами и коридором (z=-3)
-// Дыры под двери: A (x=-15), B (x=0), C (x=15)
-createWall(-18.5, -3, 7, 0.5);       // от -22 до -15
-createWall(-7.5, -3, 15, 0.5);       // от -15 до 0
-createWall(7.5, -3, 15, 0.5);        // от 0 до 15
-createWall(18.5, -3, 7, 0.5);        // от 15 до 22
+// Двери: A (x=-15), B (x=0), C (x=15) — ширина 3
+createWall(-19.25, -3, 5.5, 0.5);
+createWall(-10.5, -3, 6, 0.5);
+
+createWall(-4.5, -3, 6, 0.5);
+createWall(4.5, -3, 6, 0.5);
+
+createWall(10.5, -3, 6, 0.5);
+createWall(19.25, -3, 5.5, 0.5);
 
 // ===== СТЕНЫ НИЖНИХ КОМНАТ (D, E, F) =====
-// Разделители между нижними комнатами
-createWall(-7.5, 14.5, 0.5, 23);     // между D и E
-createWall(7.5, 14.5, 0.5, 23);      // между E и F
+createWall(-7.5, 14.5, 0.5, 23);
+createWall(7.5, 14.5, 0.5, 23);
 
-// Стены между нижними комнатами и коридором (z=3)
-createWall(-18.5, 3, 7, 0.5);        // от -22 до -15
-createWall(-7.5, 3, 15, 0.5);        // от -15 до 0
-createWall(7.5, 3, 15, 0.5);         // от 0 до 15
-createWall(18.5, 3, 7, 0.5);         // от 15 до 22
+// Двери: D (x=-15), E (x=0), F (x=15)
+createWall(-19.25, 3, 5.5, 0.5);
+createWall(-10.5, 3, 6, 0.5);
+
+createWall(-4.5, 3, 6, 0.5);
+createWall(4.5, 3, 6, 0.5);
+
+createWall(10.5, 3, 6, 0.5);
+createWall(19.25, 3, 5.5, 0.5);
 
 // ===== ДВЕРИ =====
 const doors = [];
@@ -115,7 +129,7 @@ function createDoor(x, z, width, height, depth, rotY = 0) {
 
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const door = new THREE.Mesh(geometry, doorMaterial);
-    door.position.x = -width / 2;  // петля справа
+    door.position.x = -width / 2;
     door.castShadow = true;
     door.receiveShadow = true;
     group.add(door);
@@ -136,12 +150,12 @@ function createDoor(x, z, width, height, depth, rotY = 0) {
     return doorData;
 }
 
-// Верхние комнаты (двери в стене z=-3)
+// Верхние комнаты
 createDoor(-15, -3, 3, 2.5, 0.3, 0);
 createDoor(0, -3, 3, 2.5, 0.3, 0);
 createDoor(15, -3, 3, 2.5, 0.3, 0);
 
-// Нижние комнаты (двери в стене z=3)
+// Нижние комнаты
 createDoor(-15, 3, 3, 2.5, 0.3, 0);
 createDoor(0, 3, 3, 2.5, 0.3, 0);
 createDoor(15, 3, 3, 2.5, 0.3, 0);
@@ -334,7 +348,6 @@ function spawnBug(x, z) {
     bugs.push({ mesh: bug, alive: true });
 }
 
-// Жуки в разных комнатах
 spawnBug(-15, -14.5);
 spawnBug(0, -14.5);
 spawnBug(15, -14.5);
