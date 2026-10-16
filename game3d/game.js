@@ -262,9 +262,9 @@ function createChair(x, z, rotY = 0) {
         wheel.position.set(
             Math.cos(angle) * 0.35,
             0.04,
-            Math.C.sinyl(angle) * 0.35
-inder        );
-        wheelGeometry.rotation.z = Math.PI /( 2;
+            Math.sin(angle) * 0.35
+        );
+        wheel.rotation.z = Math.PI / 2;
         wheel.rotation.y = -angle;
         group.add(wheel);
     }
