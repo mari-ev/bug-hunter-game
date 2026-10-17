@@ -7,8 +7,8 @@ scene.background = new THREE.Color(0x050505);
 // ===== КАМЕРА =====
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 let cameraAngle = 0; 
-let cameraDistance = 9; // Немного отодвинули
-let cameraHeight = 4.5; // ОПУСТИЛИ КАМЕРУ (было 8), теперь смотрит в спину
+let cameraDistance = 9; 
+let cameraHeight = 4.5; 
 
 // ===== РЕНДЕРЕР =====
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -17,7 +17,7 @@ renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // ===== СВЕТ (Базовый) =====
-const ambientLight = new THREE.AmbientLight(0x222222, 1.5); // Сделали общий свет темнее
+const ambientLight = new THREE.AmbientLight(0x333333, 1.5);
 scene.add(ambientLight);
 
 // ===== ТЕКСТУРА ЭКРАНА =====
@@ -25,7 +25,7 @@ function createErrorTexture() {
     const canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#220000'; ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#330000'; ctx.fillRect(0, 0, 256, 256);
     ctx.fillStyle = '#ff0000'; ctx.font = 'bold 40px "Courier New", monospace';
     ctx.textAlign = 'center'; ctx.fillText('ERROR', 128, 100); ctx.fillText('404', 128, 150);
     ctx.fillStyle = '#ff6666'; ctx.font = '16px "Courier New", monospace';
@@ -42,17 +42,15 @@ const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
 const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.7 });
 const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
 const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-const laptopScreenMaterial = new THREE.MeshStandardMaterial({ map: createErrorTexture(), emissive: 0xff0000, emissiveIntensity: 0.8 });
+const laptopScreenMaterial = new THREE.MeshStandardMaterial({ map: createErrorTexture(), emissive: 0xff0000, emissiveIntensity: 1.5 });
 const potMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
 const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x2e8b57 });
-
-// Материал для лампы
-const lampMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1 });
+const lampMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2 });
 
 // ===== МАССИВЫ =====
 const walls = [];
 const doors = [];
-const flickerLights = []; // Массив для мерцающих ламп
+const flickerLights = []; 
 
 // ===== ФУНКЦИИ =====
 function createWall(x, z, width, depth) {
@@ -77,44 +75,58 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
 }
 
-// МЕРЦАЮЩАЯ ЛАМПА
 function createLamp(x, z) {
-    const group = new THREE.Group();
-
-    // Сама лампа (светящаяся палка)
     const tube = new THREE.Mesh(
         new THREE.BoxGeometry(2, 0.1, 0.2),
         lampMaterial
     );
-    tube.position.set(x, 2.9, z); // Под потолком (высота стены 3)
+    tube.position.set(x, 2.9, z); 
     scene.add(tube);
 
-    // Источник света от лампы
-    const light = new THREE.PointLight(0xaaccff, 1, 10); // Голубоватый свет, дальность 10
+    const light = new THREE.PointLight(0xaaccff, 2.5, 15); 
     light.position.set(x, 2.7, z);
     light.castShadow = true;
     light.shadow.mapSize.width = 512;
     light.shadow.mapSize.height = 512;
     scene.add(light);
 
-    // Сохраняем для анимации мерцания
     flickerLights.push({
         light: light,
-        baseIntensity: 1.5,
-        flickerSpeed: 0.05 + Math.random() * 0.05, // У каждой лампы своя скорость
-        offset: Math.random() * 100 // Сдвиг фазы, чтобы мигали не синхронно
+        baseIntensity: 2.5,
+        flickerSpeed: 0.01 + Math.random() * 0.02, 
+        offset: Math.random() * 100
     });
 }
 
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
+    
+    // База
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), laptopBodyMaterial);
-    base.position.set(0, 1.06, 0); group.add(base);
+    base.position.set(0, 1.06, 0); 
+    group.add(base);
+    
+    // Корпус экрана
     const screen = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
-    screen.position.set(0, 1.18, 0.14); screen.rotation.x = 0.3; group.add(screen);
+    screen.position.set(0, 1.18, 0.14); 
+    screen.rotation.x = 0.3; 
+    group.add(screen);
+    
+    // Светящаяся матрица
     const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.21), laptopScreenMaterial);
-    display.position.set(0, 1.18, 0.13); display.rotation.x = 0.3; group.add(display);
-    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+    display.position.set(0, 1.18, 0.13); 
+    display.rotation.x = 0.3; 
+    group.add(display);
+    
+    // ИСТОЧНИК СВЕТА (Красный свет от экрана)
+    const screenLight = new THREE.PointLight(0xff0000, 1.2, 3.5); // Яркость 1.2, радиус 3.5 метра
+    screenLight.position.set(0, 1.18, 0.15); // Стоит прямо перед матрицей
+    screenLight.castShadow = false; // Отключаем тени для света экранов, чтобы не тормозило
+    group.add(screenLight);
+
+    group.position.set(x, 0, z); 
+    group.rotation.y = rotY; 
+    scene.add(group);
 }
 
 function createTable(x, z, rotY = 0) {
@@ -229,9 +241,8 @@ createChair(13.5, 6, 0);
 createCooler(4, 1);
 createPlant(17, 7);
 
-// ДОБАВЛЯЕМ ЛАМПЫ В КОМНАТЕ
-createLamp(7, 3);   // Над левой группой
-createLamp(13, 3);  // Над правой группой
+createLamp(7, 3);   
+createLamp(13, 3);  
 
 // =====================================================================
 // ===== КОНЕЦ КОМНАТЫ 1 =====
@@ -356,19 +367,13 @@ function updateCamera() {
     camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z);
 }
 
-// ===== АНИМАЦИЯ МЕРЦАНИЯ ЛАМП =====
 let time = 0;
 function updateLamps() {
     time += 1;
     flickerLights.forEach(l => {
-        // Формула для плавного, но случайного мерцания
-        const flicker = Math.sin(time * l.flickerSpeed + l.offset) * Math.sin(time * l.flickerSpeed * 2.3 + l.offset);
-        l.light.intensity = l.baseIntensity + flicker * 0.8;
-        
-        // Иногда лампа почти выключается
-        if (Math.random() < 0.02) {
-            l.light.intensity = 0.1;
-        }
+        const flicker = Math.sin(time * l.flickerSpeed + l.offset) * Math.sin(time * l.flickerSpeed * 1.5 + l.offset);
+        l.light.intensity = l.baseIntensity + flicker * 0.5; 
+        if (Math.random() < 0.005) { l.light.intensity = 0.5; }
     });
 }
 
@@ -377,7 +382,7 @@ function animate() {
     updatePlayer();
     updateDoors();
     updateCamera();
-    updateLamps(); // Включаем мерцание
+    updateLamps(); 
     renderer.render(scene, camera);
 }
 animate();
