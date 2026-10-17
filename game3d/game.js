@@ -30,16 +30,13 @@ function createErrorTexture() {
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#ff0000'; 
     ctx.fillRect(0, 0, 256, 256);
-    
     ctx.fillStyle = '#ffffff'; 
     ctx.font = 'bold 40px "Courier New", monospace';
     ctx.textAlign = 'center'; 
     ctx.fillText('ERROR', 128, 100); 
     ctx.fillText('404', 128, 150);
-    
     ctx.font = '16px "Courier New", monospace';
     ctx.fillText('BUG FOUND', 128, 200);
-    
     return new THREE.CanvasTexture(canvas);
 }
 
@@ -111,33 +108,17 @@ function createLamp(x, z) {
     });
 }
 
-// НОУТБУК
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
-    
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), laptopBodyMaterial);
-    base.position.set(0, 1.06, 0); 
-    group.add(base);
-    
+    base.position.set(0, 1.06, 0); group.add(base);
     const screen = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
-    screen.position.set(0, 1.18, 0.14); 
-    screen.rotation.x = 0.3; 
-    group.add(screen);
-    
+    screen.position.set(0, 1.18, 0.14); screen.rotation.x = 0.3; group.add(screen);
     const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.21), laptopScreenMaterial);
-    display.position.set(0, 1.18, 0.13); 
-    display.rotation.x = 0.3; 
-    group.add(display);
-    
+    display.position.set(0, 1.18, 0.13); display.rotation.x = 0.3; group.add(display);
     const screenLight = new THREE.RectAreaLight(0xff0000, 3, 0.36, 0.21); 
-    screenLight.position.set(0, 1.18, 0.15); 
-    screenLight.rotation.x = 0.3; 
-    screenLight.lookAt(0, 0, 0);
-    group.add(screenLight);
-
-    group.position.set(x, 0, z); 
-    group.rotation.y = rotY; 
-    scene.add(group);
+    screenLight.position.set(0, 1.18, 0.15); screenLight.rotation.x = 0.3; screenLight.lookAt(0, 0, 0); group.add(screenLight);
+    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
 }
 
 function createTable(x, z, rotY = 0) {
@@ -180,11 +161,11 @@ function createChair(x, z, rotY = 0) {
 
 function createCooler(x, z) {
     const group = new THREE.Group();
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1, 16), metalMaterial);
-    base.position.y = 0.5; base.castShadow = true; group.add(base);
-    const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.6, 16), waterMaterial);
-    bottle.position.y = 1.3; bottle.castShadow = true; group.add(bottle);
-    group.position.set(x, 0, z); scene.add(group); walls.push({ x, z, width: 0.6, depth: 0.6 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.8, 16), metalMaterial);
+    base.position.y = 0.4; base.castShadow = true; group.add(base);
+    const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.5, 16), waterMaterial);
+    bottle.position.y = 1.05; bottle.castShadow = true; group.add(bottle);
+    group.position.set(x, 0, z); scene.add(group); walls.push({ x, z, width: 0.5, depth: 0.5 });
 }
 
 function createPlant(x, z) {
@@ -197,6 +178,53 @@ function createPlant(x, z) {
         leaf.position.set(pos.x, pos.y, pos.z); leaf.castShadow = true; group.add(leaf);
     });
     group.position.set(x, 0, z); scene.add(group); walls.push({ x, z, width: 0.6, depth: 0.6 });
+}
+
+// ==== БОЛЬШОЙ СТОЛ ДЛЯ ПЕРЕГОВОРНОЙ (2 на 6 метров) ====
+function createConferenceTable(x, z) {
+    const group = new THREE.Group();
+    // Столешница: 6 метров в длину, 2 метра в ширину
+    const top = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, 2), woodMaterial);
+    top.position.y = 1; top.castShadow = true; top.receiveShadow = true; group.add(top);
+    
+    // Ножки
+    const legPositions = [[-2.8, 0, -0.8], [2.8, 0, -0.8], [-2.8, 0, 0.8], [2.8, 0, 0.8]];
+    legPositions.forEach(([lx, ly, lz]) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1, 0.15), darkMaterial);
+        leg.position.set(lx, 0.5, lz); leg.castShadow = true; group.add(leg);
+    });
+    group.position.set(x, 0, z);
+    scene.add(group);
+    // Коллизия для большого стола
+    walls.push({ x, z, width: 6, depth: 2 });
+}
+
+// ==== ТВ НА СТОЙКЕ ====
+function createTVOnStand(x, z, rotY = 0) {
+    const group = new THREE.Group();
+
+    // Экран (светящийся)
+    const screen = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.1), laptopScreenMaterial);
+    screen.position.y = 1.8; screen.castShadow = true; group.add(screen);
+
+    // Ножка
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8), metalMaterial);
+    pole.position.y = 0.6; pole.castShadow = true; group.add(pole);
+
+    // 4 опоры крестом
+    for(let i=0; i<4; i++) {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.15), darkMaterial);
+        leg.position.y = 0.05;
+        leg.rotation.y = (i * Math.PI / 2);
+        leg.castShadow = true;
+        group.add(leg);
+    }
+
+    group.position.set(x, 0, z);
+    group.rotation.y = rotY; // Поворот для полуоборота
+    scene.add(group);
+    // Коллизия для ТВ
+    walls.push({ x, z, width: 1.5, depth: 1.5 });
 }
 
 // ===== ПОЛ =====
@@ -216,55 +244,84 @@ const office1_Z1 = 0;
 const office1_Z2 = 8;
 const wallThickness = 0.2; 
 
-createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness);
-createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1);
-createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1);
-createWall(6.5, office1_Z2, 7, wallThickness); 
-createWall(15, office1_Z2, 6, wallThickness);  
+createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness); // Верхняя
+createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Левая
+createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Правая
+createWall(6.5, office1_Z2, 7, wallThickness);  // Низ левая
+createWall(15, office1_Z2, 6, wallThickness);   // Низ правая
 createSlidingDoor(11, 8, 2, 3, 0.2);
 
-// --- ЛЕВАЯ ГРУППА ---
+// Мебель
 createTable(7, 1, Math.PI / 2); createLaptop(7, 1, Math.PI / 2); 
 createTable(8, 1, Math.PI / 2); createLaptop(8, 1, -Math.PI / 2); 
 createTable(7, 3, Math.PI / 2); createLaptop(7, 3, Math.PI / 2);
 createTable(8, 3, Math.PI / 2); createLaptop(8, 3, -Math.PI / 2);
 createTable(7.5, 5); createLaptop(7.5, 5, Math.PI); 
-
-createChair(6, 1, Math.PI / 2);
-createChair(6, 3, Math.PI / 2);
-createChair(9, 1, -Math.PI / 2);
-createChair(9, 3, -Math.PI / 2);
-createChair(7.5, 6, Math.PI); 
-
-// --- ПРАВАЯ ГРУППА ---
+createChair(6, 1, Math.PI / 2); createChair(6, 3, Math.PI / 2); createChair(9, 1, -Math.PI / 2); createChair(9, 3, -Math.PI / 2); createChair(7.5, 6, Math.PI); 
 createTable(13, 1, Math.PI / 2); createLaptop(13, 1, Math.PI / 2);
 createTable(14, 1, Math.PI / 2); createLaptop(14, 1, -Math.PI / 2);
 createTable(13, 3, Math.PI / 2); createLaptop(13, 3, Math.PI / 2);
 createTable(14, 3, Math.PI / 2); createLaptop(14, 3, -Math.PI / 2);
 createTable(13.5, 5); createLaptop(13.5, 5, Math.PI);
-
-createChair(12, 1, Math.PI / 2);
-createChair(12, 3, Math.PI / 2);
-createChair(15, 1, -Math.PI / 2);
-createChair(15, 3, -Math.PI / 2);
-createChair(13.5, 6, Math.PI);
-
+createChair(12, 1, Math.PI / 2); createChair(12, 3, Math.PI / 2); createChair(15, 1, -Math.PI / 2); createChair(15, 3, -Math.PI / 2); createChair(13.5, 6, Math.PI);
 createCooler(4, 1);
 createPlant(17, 7);
-
 createLamp(7, 3);   
 createLamp(13, 3);  
-
 // =====================================================================
 // ===== КОНЕЦ КОМНАТЫ 1 =====
 // =====================================================================
 
-// ===== ПЕРСОНАЖ (УВЕЛИЧЕН ДО 2 МЕТРОВ) =====
+
+// =====================================================================
+// ===== КОМНАТА 2: ПЕРЕГОВОРКА =====
+// =====================================================================
+// Начинается с X=18, заканчивается X=30. По Z от 0 до 8.
+
+const conf_X1 = 18;
+const conf_X2 = 30;
+const conf_Z1 = 0;
+const conf_Z2 = 8;
+
+createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); // Верхняя
+createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); // Правая (внешняя)
+createWall(24, conf_Z2, 8, wallThickness);  // Низ (слева от двери)
+createWall(29, conf_Z2, 2, wallThickness);  // Низ (справа от двери)
+
+// Дверь в переговорку (по схеме на правой стороне нижней стены, ширина 2)
+createSlidingDoor(28, conf_Z2, 2, 3, 0.2);
+
+// БОЛЬШОЙ СТОЛ (по центру комнаты, смещен вправо)
+// Координаты по схеме: от X=21 до X=27
+createConferenceTable(24, 4);
+
+// СТУЛЬЯ ВОКРУГ СТОЛА (по схеме: 3 сверху, 3 снизу)
+createChair(22, 2.5, 0); // Верхние (смотрят вниз)
+createChair(24, 2.5, 0);
+createChair(26, 2.5, 0);
+
+createChair(22, 5.5, Math.PI); // Нижние (смотрят вверх)
+createChair(24, 5.5, Math.PI);
+createChair(26, 5.5, Math.PI);
+
+// ТВ НА СТОЙКЕ (в левом верхнем углу, в полуоборот)
+// Ставим в координатах X=20, Z=2 и поворачиваем
+createTVOnStand(20, 2, -Math.PI / 4); // Поворот на 45 градусов (полуоборот)
+
+// Лампа в переговорке
+createLamp(24, 4);
+
+// =====================================================================
+// ===== КОНЕЦ КОМНАТЫ 2 =====
+// =====================================================================
+
+
+// ===== ПЕРСОНАЖ =====
 const playerTexture = new THREE.TextureLoader().load('assets/player.png');
-const playerGeometry = new THREE.PlaneGeometry(1.6, 2.0); // Ширина 1.6, высота 2.0
+const playerGeometry = new THREE.PlaneGeometry(1.6, 2.0); 
 const playerMaterial = new THREE.MeshBasicMaterial({ map: playerTexture, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
-player.position.set(5, 1.0, 4); // Опускаем ровно на пол (высота 2.0, значит центр на 1.0)
+player.position.set(5, 1.0, 4);
 scene.add(player);
 
 // ===== УПРАВЛЕНИЕ =====
@@ -273,7 +330,7 @@ document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
 document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-let targetPosition = new THREE.Vector3(player.position.x, 0.8, player.position.z);
+let targetPosition = new THREE.Vector3(player.position.x, 1.0, player.position.z);
 let hasTarget = false;
 
 let isDragging = false;
@@ -311,13 +368,13 @@ renderer.domElement.addEventListener('click', (e) => {
     const intersects = raycaster.intersectObject(floor);
     if (intersects.length > 0) {
         const point = intersects[0].point;
-        targetPosition.set(point.x, 0.8, point.z);
+        targetPosition.set(point.x, 1.0, point.z);
         hasTarget = true;
     }
 });
 
 function canMoveTo(x, z) {
-    const radius = 0.4;
+    const radius = 0.5;
     for (const wall of walls) {
         const halfW = wall.width / 2 + radius;
         const halfD = wall.depth / 2 + radius;
@@ -329,7 +386,7 @@ function canMoveTo(x, z) {
 }
 
 function updateDoors() {
-    const triggerDist = 2.5;
+    const triggerDist = 3;
     doors.forEach(door => {
         const dx = player.position.x - door.group.position.x;
         const dz = player.position.z - door.group.position.z;
@@ -341,7 +398,7 @@ function updateDoors() {
     });
 }
 
-const speed = 0.08;
+const speed = 0.1;
 
 function updatePlayer() {
     let newX = player.position.x;
@@ -375,7 +432,7 @@ function updateCamera() {
     const targetCamX = player.position.x + Math.sin(cameraAngle) * cameraDistance;
     const targetCamZ = player.position.z + Math.cos(cameraAngle) * cameraDistance;
     camera.position.lerp(new THREE.Vector3(targetCamX, player.position.y + cameraHeight, targetCamZ), 0.1);
-    camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z);
+    camera.lookAt(player.position.x, player.position.y + 0.6, player.position.z);
 }
 
 let time = 0;
