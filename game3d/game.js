@@ -28,9 +28,10 @@ function createErrorTexture() {
     const canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ff0000'; 
+    ctx.fillStyle = '#ff0000'; // Красный фон
     ctx.fillRect(0, 0, 256, 256);
     
+    // Белый текст
     ctx.fillStyle = '#ffffff'; 
     ctx.font = 'bold 40px "Courier New", monospace';
     ctx.textAlign = 'center'; 
@@ -53,10 +54,11 @@ const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x4a90d9, transpar
 const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
 const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
 
+// Экран (яркий, чтобы его было видно)
 const laptopScreenMaterial = new THREE.MeshStandardMaterial({ 
     map: createErrorTexture(), 
     emissive: 0xff0000, 
-    emissiveIntensity: 1 
+    emissiveIntensity: 1.5 
 });
 
 const potMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
@@ -111,40 +113,33 @@ function createLamp(x, z) {
     });
 }
 
-// НОУТБУК (Направленный свет)
+// НОУТБУК (Исправлен)
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
     
+    // База
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), laptopBodyMaterial);
     base.position.set(0, 1.06, 0); 
     group.add(base);
     
+    // Корпус экрана
     const screen = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
     screen.position.set(0, 1.18, 0.14); 
     screen.rotation.x = 0.3; 
     group.add(screen);
     
+    // Светящаяся матрица (чуть сдвинута вперед, чтобы не было артефактов)
     const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.21), laptopScreenMaterial);
-    display.position.set(0, 1.18, 0.13); 
+    display.position.set(0, 1.18, 0.14); // Сдвинули с 0.13 на 0.14
     display.rotation.x = 0.3; 
     group.add(display);
     
-    // Прямоугольный источник света (поднят в центр)
-    const screenLight = new THREE.RectAreaLight(0xff0000, 2.5, 0.36, 0.21); 
-    screenLight.position.set(0, 1.2, 0.13); 
+    // Прямоугольный источник света (в центре экрана)
+    const screenLight = new THREE.RectAreaLight(0xff0000, 3, 0.36, 0.21); // Яркость 3
+    screenLight.position.set(0, 1.18, 0.15); // Чуть впереди матрицы
     screenLight.rotation.x = 0.3; 
     screenLight.lookAt(0, 0, 0);
     group.add(screenLight);
-
-    // НЕВИДИМАЯ СТЕНКА ПОЗАДИ ЭКРАНА (чтобы свет не проходил назад)
-    const lightBlocker = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.4, 0.3),
-        new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide }) // Черный цвет
-    );
-    lightBlocker.position.set(0, 1.18, 0.16); // Сразу за экраном
-    lightBlocker.rotation.x = 0.3;
-    lightBlocker.rotation.y = Math.PI; // Повернут лицом к экрану (отражает свет)
-    group.add(lightBlocker);
 
     group.position.set(x, 0, z); 
     group.rotation.y = rotY; 
