@@ -259,14 +259,12 @@ createLamp(13, 3);
 // ===== КОНЕЦ КОМНАТЫ 1 =====
 // =====================================================================
 
-// ===== ПЕРСОНАЖ (ВОЗВРАЩАЕМ НОРМАЛЬНЫЙ РОСТ) =====
+// ===== ПЕРСОНАЖ (УВЕЛИЧЕН ДО 2 МЕТРОВ) =====
 const playerTexture = new THREE.TextureLoader().load('assets/player.png');
-// Возвращаем 1.3 на 1.6
-const playerGeometry = new THREE.PlaneGeometry(1.3, 1.6); 
+const playerGeometry = new THREE.PlaneGeometry(1.6, 2.0); // Ширина 1.6, высота 2.0
 const playerMaterial = new THREE.MeshBasicMaterial({ map: playerTexture, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
-// Опускаем ровно на пол (половина роста = 0.8)
-player.position.set(5, 0.8, 4);
+player.position.set(5, 1.0, 4); // Опускаем ровно на пол (высота 2.0, значит центр на 1.0)
 scene.add(player);
 
 // ===== УПРАВЛЕНИЕ =====
