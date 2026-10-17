@@ -6,10 +6,9 @@ scene.background = new THREE.Color(0x050505);
 
 // ===== КАМЕРА =====
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-const cameraTarget = new THREE.Vector3(0, 1, 0);
 let cameraAngle = 0; 
-let cameraDistance = 10; 
-let cameraHeight = 8; 
+let cameraDistance = 9; // Немного отодвинули
+let cameraHeight = 4.5; // ОПУСТИЛИ КАМЕРУ (было 8), теперь смотрит в спину
 
 // ===== РЕНДЕРЕР =====
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -17,15 +16,22 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
-// ===== СВЕТ =====
-const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+// ===== СВЕТ (Базовый) =====
+const ambientLight = new THREE.AmbientLight(0x222222, 1.5); // Сделали общий свет темнее
 scene.add(ambientLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-dirLight.position.set(5, 10, 5);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 2048;
-dirLight.shadow.mapSize.height = 2048;
-scene.add(dirLight);
+
+// ===== ТЕКСТУРА ЭКРАНА =====
+function createErrorTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#220000'; ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#ff0000'; ctx.font = 'bold 40px "Courier New", monospace';
+    ctx.textAlign = 'center'; ctx.fillText('ERROR', 128, 100); ctx.fillText('404', 128, 150);
+    ctx.fillStyle = '#ff6666'; ctx.font = '16px "Courier New", monospace';
+    ctx.fillText('BUG FOUND', 128, 200);
+    return new THREE.CanvasTexture(canvas);
+}
 
 // ===== МАТЕРИАЛЫ =====
 const wallInnerMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
@@ -36,20 +42,24 @@ const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
 const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.7 });
 const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
 const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-const laptopScreenMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00 });
+const laptopScreenMaterial = new THREE.MeshStandardMaterial({ map: createErrorTexture(), emissive: 0xff0000, emissiveIntensity: 0.8 });
 const potMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
 const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x2e8b57 });
+
+// Материал для лампы
+const lampMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1 });
 
 // ===== МАССИВЫ =====
 const walls = [];
 const doors = [];
+const flickerLights = []; // Массив для мерцающих ламп
 
 // ===== ФУНКЦИИ =====
 function createWall(x, z, width, depth) {
     const geometry = new THREE.BoxGeometry(width, 3, depth);
     const wall = new THREE.Mesh(geometry, wallInnerMaterial);
     wall.position.set(x, 1.5, z);
-    wall.castShadow = true;
+    wall.castShadow = false; 
     wall.receiveShadow = true;
     scene.add(wall);
     walls.push({ x, z, width, depth });
@@ -59,13 +69,41 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     const group = new THREE.Group();
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const door = new THREE.Mesh(geometry, doorMaterial);
-    door.castShadow = true;
-    door.receiveShadow = true;
+    door.castShadow = true; door.receiveShadow = true;
     group.add(door);
     group.position.set(x, height / 2, z);
     group.rotation.y = rotY;
     scene.add(group);
     doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
+}
+
+// МЕРЦАЮЩАЯ ЛАМПА
+function createLamp(x, z) {
+    const group = new THREE.Group();
+
+    // Сама лампа (светящаяся палка)
+    const tube = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 0.1, 0.2),
+        lampMaterial
+    );
+    tube.position.set(x, 2.9, z); // Под потолком (высота стены 3)
+    scene.add(tube);
+
+    // Источник света от лампы
+    const light = new THREE.PointLight(0xaaccff, 1, 10); // Голубоватый свет, дальность 10
+    light.position.set(x, 2.7, z);
+    light.castShadow = true;
+    light.shadow.mapSize.width = 512;
+    light.shadow.mapSize.height = 512;
+    scene.add(light);
+
+    // Сохраняем для анимации мерцания
+    flickerLights.push({
+        light: light,
+        baseIntensity: 1.5,
+        flickerSpeed: 0.05 + Math.random() * 0.05, // У каждой лампы своя скорость
+        offset: Math.random() * 100 // Сдвиг фазы, чтобы мигали не синхронно
+    });
 }
 
 function createLaptop(x, z, rotY = 0) {
@@ -94,44 +132,26 @@ function createTable(x, z, rotY = 0) {
     else walls.push({ x, z, width: 1, depth: 2 });
 }
 
-// СТУЛ С УВЕЛИЧЕННЫМИ КОЛЁСИКАМИ
 function createChair(x, z, rotY = 0) {
     const group = new THREE.Group();
-    
-    // Сиденье
     const seat = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.15, 0.7), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
     seat.position.y = 0.5; seat.castShadow = true; group.add(seat);
-    
-    // Спинка
     const back = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.12), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
     back.position.set(0, 0.9, -0.3); back.castShadow = true; group.add(back);
-    
-    // Центральная ножка
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), new THREE.MeshStandardMaterial({ color: 0x666666 }));
     leg.position.y = 0.25; group.add(leg);
-    
-    // 5 спиц
     for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2;
         const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.05, 0.08), new THREE.MeshStandardMaterial({ color: 0x666666 }));
         spoke.position.set(Math.cos(angle) * 0.2, 0.07, Math.sin(angle) * 0.2);
         spoke.rotation.y = -angle; group.add(spoke);
     }
-    
-    // 5 КОЛЁСИКОВ (теперь большие и с тенями)
     for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2;
-        const wheel = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.12, 0.12, 0.08, 12),
-            new THREE.MeshStandardMaterial({ color: 0x111111 })
-        );
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.08, 12), new THREE.MeshStandardMaterial({ color: 0x111111 }));
         wheel.position.set(Math.cos(angle) * 0.35, 0.08, Math.sin(angle) * 0.35);
-        wheel.rotation.z = Math.PI / 2;
-        wheel.rotation.y = -angle;
-        wheel.castShadow = true;
-        group.add(wheel);
+        wheel.rotation.z = Math.PI / 2; wheel.rotation.y = -angle; wheel.castShadow = true; group.add(wheel);
     }
-    
     group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
 }
 
@@ -171,21 +191,21 @@ const office1_X1 = 3;
 const office1_X2 = 18;
 const office1_Z1 = 0;
 const office1_Z2 = 8;
-const wallThickness = 0.5;
+const wallThickness = 0.2; 
 
-createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness); // Верхняя
-createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Левая
-createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Правая
-createWall(6.5, office1_Z2, 7, wallThickness);  // Низ левая
-createWall(15, office1_Z2, 6, wallThickness);   // Низ правая
+createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness);
+createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1);
+createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1);
+createWall(6.5, office1_Z2, 7, wallThickness); 
+createWall(15, office1_Z2, 6, wallThickness);  
 createSlidingDoor(11, 8, 2, 3, 0.2);
 
 // --- ЛЕВАЯ ГРУППА ---
-createTable(7, 1, Math.PI / 2); createLaptop(7, 1, -Math.PI / 2); 
-createTable(8, 1, Math.PI / 2); createLaptop(8, 1, Math.PI / 2); 
-createTable(7, 3, Math.PI / 2); createLaptop(7, 3, -Math.PI / 2);
-createTable(8, 3, Math.PI / 2); createLaptop(8, 3, Math.PI / 2);
-createTable(7.5, 5); createLaptop(7.5, 5, Math.PI); 
+createTable(7, 1, Math.PI / 2); createLaptop(7, 1, Math.PI / 2); 
+createTable(8, 1, Math.PI / 2); createLaptop(8, 1, -Math.PI / 2); 
+createTable(7, 3, Math.PI / 2); createLaptop(7, 3, Math.PI / 2);
+createTable(8, 3, Math.PI / 2); createLaptop(8, 3, -Math.PI / 2);
+createTable(7.5, 5); createLaptop(7.5, 5, 0); 
 
 createChair(6, 1, Math.PI / 2);
 createChair(6, 3, Math.PI / 2);
@@ -194,11 +214,11 @@ createChair(9, 3, -Math.PI / 2);
 createChair(7.5, 6, 0);
 
 // --- ПРАВАЯ ГРУППА ---
-createTable(13, 1, Math.PI / 2); createLaptop(13, 1, -Math.PI / 2);
-createTable(14, 1, Math.PI / 2); createLaptop(14, 1, Math.PI / 2);
-createTable(13, 3, Math.PI / 2); createLaptop(13, 3, -Math.PI / 2);
-createTable(14, 3, Math.PI / 2); createLaptop(14, 3, Math.PI / 2);
-createTable(13.5, 5); createLaptop(13.5, 5, Math.PI);
+createTable(13, 1, Math.PI / 2); createLaptop(13, 1, Math.PI / 2);
+createTable(14, 1, Math.PI / 2); createLaptop(14, 1, -Math.PI / 2);
+createTable(13, 3, Math.PI / 2); createLaptop(13, 3, Math.PI / 2);
+createTable(14, 3, Math.PI / 2); createLaptop(14, 3, -Math.PI / 2);
+createTable(13.5, 5); createLaptop(13.5, 5, 0);
 
 createChair(12, 1, Math.PI / 2);
 createChair(12, 3, Math.PI / 2);
@@ -206,9 +226,12 @@ createChair(15, 1, -Math.PI / 2);
 createChair(15, 3, -Math.PI / 2);
 createChair(13.5, 6, 0);
 
-// Кулер и Цветок
 createCooler(4, 1);
 createPlant(17, 7);
+
+// ДОБАВЛЯЕМ ЛАМПЫ В КОМНАТЕ
+createLamp(7, 3);   // Над левой группой
+createLamp(13, 3);  // Над правой группой
 
 // =====================================================================
 // ===== КОНЕЦ КОМНАТЫ 1 =====
@@ -216,22 +239,21 @@ createPlant(17, 7);
 
 // ===== ПЕРСОНАЖ =====
 const playerTexture = new THREE.TextureLoader().load('assets/player.png');
-const playerGeometry = new THREE.PlaneGeometry(2, 2.4);
+const playerGeometry = new THREE.PlaneGeometry(1.3, 1.6); 
 const playerMaterial = new THREE.MeshBasicMaterial({ map: playerTexture, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
-player.position.set(5, 1.2, 4);
+player.position.set(5, 0.8, 4);
 scene.add(player);
 
-// ===== УПРАВЛЕНИЕ ПЕРСОНАЖЕМ =====
+// ===== УПРАВЛЕНИЕ =====
 const keys = {};
 document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
 document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-let targetPosition = new THREE.Vector3(player.position.x, 1.2, player.position.z);
+let targetPosition = new THREE.Vector3(player.position.x, 0.8, player.position.z);
 let hasTarget = false;
 
-// ===== ВРАЩЕНИЕ КАМЕРЫ =====
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 
@@ -267,14 +289,13 @@ renderer.domElement.addEventListener('click', (e) => {
     const intersects = raycaster.intersectObject(floor);
     if (intersects.length > 0) {
         const point = intersects[0].point;
-        targetPosition.set(point.x, 1.2, point.z);
+        targetPosition.set(point.x, 0.8, point.z);
         hasTarget = true;
     }
 });
 
-// ===== КОЛЛИЗИИ =====
 function canMoveTo(x, z) {
-    const radius = 0.5;
+    const radius = 0.4;
     for (const wall of walls) {
         const halfW = wall.width / 2 + radius;
         const halfD = wall.depth / 2 + radius;
@@ -286,7 +307,7 @@ function canMoveTo(x, z) {
 }
 
 function updateDoors() {
-    const triggerDist = 3;
+    const triggerDist = 2.5;
     doors.forEach(door => {
         const dx = player.position.x - door.group.position.x;
         const dz = player.position.z - door.group.position.z;
@@ -298,7 +319,7 @@ function updateDoors() {
     });
 }
 
-const speed = 0.1;
+const speed = 0.08;
 
 function updatePlayer() {
     let newX = player.position.x;
@@ -332,7 +353,23 @@ function updateCamera() {
     const targetCamX = player.position.x + Math.sin(cameraAngle) * cameraDistance;
     const targetCamZ = player.position.z + Math.cos(cameraAngle) * cameraDistance;
     camera.position.lerp(new THREE.Vector3(targetCamX, player.position.y + cameraHeight, targetCamZ), 0.1);
-    camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
+    camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z);
+}
+
+// ===== АНИМАЦИЯ МЕРЦАНИЯ ЛАМП =====
+let time = 0;
+function updateLamps() {
+    time += 1;
+    flickerLights.forEach(l => {
+        // Формула для плавного, но случайного мерцания
+        const flicker = Math.sin(time * l.flickerSpeed + l.offset) * Math.sin(time * l.flickerSpeed * 2.3 + l.offset);
+        l.light.intensity = l.baseIntensity + flicker * 0.8;
+        
+        // Иногда лампа почти выключается
+        if (Math.random() < 0.02) {
+            l.light.intensity = 0.1;
+        }
+    });
 }
 
 function animate() {
@@ -340,6 +377,7 @@ function animate() {
     updatePlayer();
     updateDoors();
     updateCamera();
+    updateLamps(); // Включаем мерцание
     renderer.render(scene, camera);
 }
 animate();
