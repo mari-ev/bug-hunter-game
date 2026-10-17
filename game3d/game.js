@@ -25,8 +25,9 @@ scene.add(ambientLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
 dirLight.position.set(5, 10, 5);
 dirLight.castShadow = true;
-dirLight.shadowMap.width = 2048;
-dirLight.shadowMap.height = 2048;
+// ИСПРАВЛЕНО ТУТ:
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
 scene.add(dirLight);
 
 // ===== МАТЕРИАЛЫ =====
@@ -106,7 +107,8 @@ function createTable(x, z, rotY = 0) {
     });
     group.position.set(x, 0, z); group.rotation.y = rotY;
     scene.add(group);
-    // Обновляем коллизию в зависимости от поворота
+    
+    // Коллизия для стола
     if (rotY === 0) walls.push({ x, z, width: 2, depth: 1 });
     else walls.push({ x, z, width: 1, depth: 2 });
 }
@@ -184,17 +186,17 @@ createSlidingDoor(11, 8, 2, 3, 0.2);
 // --- ЛЕВАЯ ГРУППА (Центр X=7) ---
 createTable(7, 2.5, Math.PI / 2); 
 createLaptop(7, 2.5, Math.PI / 2);
-createChair(6, 2.5, Math.PI / 2); // Стул слева
-createChair(8, 2.5, -Math.PI / 2); // Стул справа
+createChair(6, 2.5, Math.PI / 2); 
+createChair(8, 2.5, -Math.PI / 2); 
 
 createTable(7, 4.5, Math.PI / 2);
 createLaptop(7, 4.5, Math.PI / 2);
 createChair(6, 4.5, Math.PI / 2); 
 createChair(8, 4.5, -Math.PI / 2); 
 
-createTable(7, 6.5); // Горизонтальный
+createTable(7, 6.5); 
 createLaptop(7, 6.5);
-createChair(7, 5.5, 0); // Стул сверху
+createChair(7, 5.5, 0); 
 
 
 // --- ПРАВАЯ ГРУППА (Центр X=13) ---
