@@ -25,8 +25,8 @@ scene.add(ambientLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
 dirLight.position.set(5, 10, 5);
 dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 2048;
-dirLight.shadow.mapSize.height = 2048;
+dirLight.shadowMap.width = 2048;
+dirLight.shadowMap.height = 2048;
 scene.add(dirLight);
 
 // ===== МАТЕРИАЛЫ =====
@@ -36,6 +36,7 @@ const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x4a3a2a });
 const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
 const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
 const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.7 });
+const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
 
 const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
 const laptopScreenMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00 });
@@ -43,8 +44,9 @@ const laptopScreenMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00, e
 const potMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
 const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x2e8b57 });
 
-// ===== МАССИВ СТЕН (для коллизий) =====
+// ===== МАССИВЫ =====
 const walls = [];
+const doors = [];
 
 // ===== БАЗОВЫЕ ФУНКЦИИ =====
 
@@ -56,6 +58,30 @@ function createWall(x, z, width, depth) {
     wall.receiveShadow = true;
     scene.add(wall);
     walls.push({ x, z, width, depth });
+}
+
+// СДВИЖНАЯ ДВЕРЬ
+function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
+    const group = new THREE.Group();
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+    const door = new THREE.Mesh(geometry, doorMaterial);
+    door.castShadow = true;
+    door.receiveShadow = true;
+    group.add(door);
+
+    group.position.set(x, height / 2, z);
+    group.rotation.y = rotY;
+    scene.add(group);
+
+    doors.push({
+        group: group,
+        startX: x,
+        startZ: z,
+        width: width,
+        rotY: rotY,
+        openAmount: 0,
+        isHorizontal: rotY === 0
+    });
 }
 
 function createLaptop(x, z, rotY = 0) {
@@ -80,7 +106,9 @@ function createTable(x, z, rotY = 0) {
     });
     group.position.set(x, 0, z); group.rotation.y = rotY;
     scene.add(group);
-    walls.push({ x, z, width: 2, depth: 1 });
+    // Обновляем коллизию в зависимости от поворота
+    if (rotY === 0) walls.push({ x, z, width: 2, depth: 1 });
+    else walls.push({ x, z, width: 1, depth: 2 });
 }
 
 function createChair(x, z, rotY = 0) {
@@ -121,7 +149,7 @@ function createPlant(x, z) {
     group.position.set(x, 0, z); scene.add(group); walls.push({ x, z, width: 0.6, depth: 0.6 });
 }
 
-// ===== ПОЛ (на весь мир 65x65) =====
+// ===== ПОЛ =====
 const floorGeometry = new THREE.PlaneGeometry(65, 65);
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
@@ -130,7 +158,6 @@ floor.receiveShadow = true;
 scene.add(floor);
 
 
-// =====================================================================
 // =====================================================================
 // ===== КОМНАТА 1: ОФИС №1 =====
 // =====================================================================
@@ -141,63 +168,52 @@ const office1_Z1 = 0;
 const office1_Z2 = 8;
 const wallThickness = 0.5;
 
-// Верхняя стена
-createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness);
-// Левая стена
-createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1);
-// Правая стена
-createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1);
+createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness); // Верхняя
+createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Левая
+createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Правая
 
 // НИЖНЯЯ СТЕНА (с проёмом для двери от X=10 до X=12 на Z=8)
 createWall(6.5, office1_Z2, 7, wallThickness);  // Левая часть
 createWall(15, office1_Z2, 6, wallThickness);   // Правая часть
 
-// САМА ДВЕРЬ (сдвижная, от 10 до 12)
+// САМА ДВЕРЬ (сдвижная)
 createSlidingDoor(11, 8, 2, 3, 0.2);
 
-// ===== РАССТАНОВКА СТОЛОВ (Как на рисунке) =====
+// ===== РАССТАНОВКА СТОЛОВ =====
 
-// --- ЛЕВАЯ ГРУППА СТОЛОВ (Центр по X = 7) ---
-// Верхний вертикальный стол (смотрит вверх)
-createTable(7, 2.5, Math.PI / 2); // Повернут на 90 градусов
+// --- ЛЕВАЯ ГРУППА (Центр X=7) ---
+createTable(7, 2.5, Math.PI / 2); 
 createLaptop(7, 2.5, Math.PI / 2);
 createChair(6, 2.5, Math.PI / 2); // Стул слева
 createChair(8, 2.5, -Math.PI / 2); // Стул справа
 
-// Средний вертикальный стол (смотрит вниз)
 createTable(7, 4.5, Math.PI / 2);
 createLaptop(7, 4.5, Math.PI / 2);
-createChair(6, 4.5, Math.PI / 2); // Стул слева
-createChair(8, 4.5, -Math.PI / 2); // Стул справа
+createChair(6, 4.5, Math.PI / 2); 
+createChair(8, 4.5, -Math.PI / 2); 
 
-// Нижний горизонтальный стол
-createTable(7, 6.5); // Обычный, горизонтальный
+createTable(7, 6.5); // Горизонтальный
 createLaptop(7, 6.5);
 createChair(7, 5.5, 0); // Стул сверху
 
 
-// --- ПРАВАЯ ГРУППА СТОЛОВ (Центр по X = 13) ---
-// Верхний вертикальный стол
+// --- ПРАВАЯ ГРУППА (Центр X=13) ---
 createTable(13, 2.5, Math.PI / 2);
 createLaptop(13, 2.5, Math.PI / 2);
 createChair(12, 2.5, Math.PI / 2);
 createChair(14, 2.5, -Math.PI / 2);
 
-// Средний вертикальный стол
 createTable(13, 4.5, Math.PI / 2);
 createLaptop(13, 4.5, Math.PI / 2);
 createChair(12, 4.5, Math.PI / 2);
 createChair(14, 4.5, -Math.PI / 2);
 
-// Нижний горизонтальный стол
 createTable(13, 6.5);
 createLaptop(13, 6.5);
 createChair(13, 5.5, 0);
 
-// Кулер (Х) в левом верхнем углу
+// Кулер и Цветок
 createCooler(4, 1);
-
-// Цветок (Ц) в правом нижнем углу
 createPlant(17, 7);
 
 // =====================================================================
@@ -210,7 +226,7 @@ const playerTexture = new THREE.TextureLoader().load('assets/player.png');
 const playerGeometry = new THREE.PlaneGeometry(2, 2.4);
 const playerMaterial = new THREE.MeshBasicMaterial({ map: playerTexture, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
-player.position.set(5, 1.2, 4); // Ставим в Офис 1
+player.position.set(5, 1.2, 4);
 scene.add(player);
 
 // ===== УПРАВЛЕНИЕ =====
@@ -246,6 +262,26 @@ function canMoveTo(x, z) {
         }
     }
     return true;
+}
+
+// ===== ЛОГИКА ДВЕРЕЙ =====
+function updateDoors() {
+    const triggerDist = 3;
+
+    doors.forEach(door => {
+        const dx = player.position.x - door.group.position.x;
+        const dz = player.position.z - door.group.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+
+        const targetAmount = dist < triggerDist ? 1 : 0;
+        door.openAmount += (targetAmount - door.openAmount) * 0.1;
+
+        if (door.isHorizontal) {
+            door.group.position.x = door.startX + (door.openAmount * door.width);
+        } else {
+            door.group.position.z = door.startZ + (door.openAmount * door.width);
+        }
+    });
 }
 
 // ===== ДВИЖЕНИЕ И КАМЕРА =====
@@ -298,6 +334,7 @@ function updateCamera() {
 function animate() {
     requestAnimationFrame(animate);
     updatePlayer();
+    updateDoors();
     updateCamera();
     renderer.render(scene, camera);
 }
