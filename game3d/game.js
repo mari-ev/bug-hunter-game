@@ -160,6 +160,7 @@ floor.receiveShadow = true;
 scene.add(floor);
 
 
+
 // =====================================================================
 // ===== КОМНАТА 1: ОФИС №1 =====
 // =====================================================================
@@ -181,38 +182,56 @@ createWall(15, office1_Z2, 6, wallThickness);   // Правая часть
 // САМА ДВЕРЬ (сдвижная)
 createSlidingDoor(11, 8, 2, 3, 0.2);
 
-// ===== РАССТАНОВКА СТОЛОВ =====
+// ===== РАССТАНОВКА СТОЛОВ (Строго по твоим координатам) =====
 
-// --- ЛЕВАЯ ГРУППА (Центр X=7) ---
-createTable(7, 2.5, Math.PI / 2); 
-createLaptop(7, 2.5, Math.PI / 2);
-createChair(6, 2.5, Math.PI / 2); 
-createChair(8, 2.5, -Math.PI / 2); 
+// --- ЛЕВАЯ ГРУППА ---
+// Верхний ряд (спинка к спинке, у самой стены Z=0)
+createTable(7, 1, Math.PI / 2); 
+createLaptop(7, 1, Math.PI / 2);
+createTable(8, 1, Math.PI / 2); 
+createLaptop(8, 1, Math.PI / 2);
 
-createTable(7, 4.5, Math.PI / 2);
-createLaptop(7, 4.5, Math.PI / 2);
-createChair(6, 4.5, Math.PI / 2); 
-createChair(8, 4.5, -Math.PI / 2); 
+// Средний ряд (спинка к спинке, Z=2)
+createTable(7, 3, Math.PI / 2); 
+createLaptop(7, 3, Math.PI / 2);
+createTable(8, 3, Math.PI / 2); 
+createLaptop(8, 3, Math.PI / 2);
 
-createTable(7, 6.5); 
-createLaptop(7, 6.5);
-createChair(7, 5.5, 0); 
+// Нижний горизонтальный стол (Z=5)
+createTable(7.5, 5); 
+createLaptop(7.5, 5);
+
+// Стулья вокруг левой группы (5 кружочков)
+createChair(6, 1, Math.PI / 2);
+createChair(6, 3, Math.PI / 2);
+createChair(9, 1, -Math.PI / 2);
+createChair(9, 3, -Math.PI / 2);
+createChair(7.5, 6, 0);
 
 
-// --- ПРАВАЯ ГРУППА (Центр X=13) ---
-createTable(13, 2.5, Math.PI / 2);
-createLaptop(13, 2.5, Math.PI / 2);
-createChair(12, 2.5, Math.PI / 2);
-createChair(14, 2.5, -Math.PI / 2);
+// --- ПРАВАЯ ГРУППА ---
+// Верхний ряд (спинка к спинке, у самой стены Z=0)
+createTable(13, 1, Math.PI / 2); 
+createLaptop(13, 1, Math.PI / 2);
+createTable(14, 1, Math.PI / 2); 
+createLaptop(14, 1, Math.PI / 2);
 
-createTable(13, 4.5, Math.PI / 2);
-createLaptop(13, 4.5, Math.PI / 2);
-createChair(12, 4.5, Math.PI / 2);
-createChair(14, 4.5, -Math.PI / 2);
+// Средний ряд (спинка к спинке, Z=2)
+createTable(13, 3, Math.PI / 2); 
+createLaptop(13, 3, Math.PI / 2);
+createTable(14, 3, Math.PI / 2); 
+createLaptop(14, 3, Math.PI / 2);
 
-createTable(13, 6.5);
-createLaptop(13, 6.5);
-createChair(13, 5.5, 0);
+// Нижний горизонтальный стол (Z=5)
+createTable(13.5, 5); 
+createLaptop(13.5, 5);
+
+// Стулья вокруг правой группы (5 кружочков)
+createChair(12, 1, Math.PI / 2);
+createChair(12, 3, Math.PI / 2);
+createChair(15, 1, -Math.PI / 2);
+createChair(15, 3, -Math.PI / 2);
+createChair(13.5, 6, 0);
 
 // Кулер и Цветок
 createCooler(4, 1);
