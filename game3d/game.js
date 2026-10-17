@@ -111,33 +111,40 @@ function createLamp(x, z) {
     });
 }
 
-// НОУТБУК (СВЕТ ПОДНЯТ)
+// НОУТБУК (Направленный свет)
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
     
-    // База
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), laptopBodyMaterial);
     base.position.set(0, 1.06, 0); 
     group.add(base);
     
-    // Корпус экрана
     const screen = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
     screen.position.set(0, 1.18, 0.14); 
     screen.rotation.x = 0.3; 
     group.add(screen);
     
-    // Светящаяся матрица
     const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.21), laptopScreenMaterial);
     display.position.set(0, 1.18, 0.13); 
     display.rotation.x = 0.3; 
     group.add(display);
     
-    // ПРЯМОУГОЛЬНЫЙ ИСТОЧНИК СВЕТА (поднят выше к центру экрана)
-    const screenLight = new THREE.RectAreaLight(0xff0000, 2, 0.36, 0.21); 
-    screenLight.position.set(0, 1.22, 0.14); // Подняли Y с 1.18 до 1.22
+    // Прямоугольный источник света (поднят в центр)
+    const screenLight = new THREE.RectAreaLight(0xff0000, 2.5, 0.36, 0.21); 
+    screenLight.position.set(0, 1.2, 0.13); 
     screenLight.rotation.x = 0.3; 
     screenLight.lookAt(0, 0, 0);
     group.add(screenLight);
+
+    // НЕВИДИМАЯ СТЕНКА ПОЗАДИ ЭКРАНА (чтобы свет не проходил назад)
+    const lightBlocker = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.4, 0.3),
+        new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide }) // Черный цвет
+    );
+    lightBlocker.position.set(0, 1.18, 0.16); // Сразу за экраном
+    lightBlocker.rotation.x = 0.3;
+    lightBlocker.rotation.y = Math.PI; // Повернут лицом к экрану (отражает свет)
+    group.add(lightBlocker);
 
     group.position.set(x, 0, z); 
     group.rotation.y = rotY; 
@@ -232,15 +239,12 @@ createTable(7, 1, Math.PI / 2); createLaptop(7, 1, Math.PI / 2);
 createTable(8, 1, Math.PI / 2); createLaptop(8, 1, -Math.PI / 2); 
 createTable(7, 3, Math.PI / 2); createLaptop(7, 3, Math.PI / 2);
 createTable(8, 3, Math.PI / 2); createLaptop(8, 3, -Math.PI / 2);
-
-// Нижний горизонтальный стол (Ноутбук развернут на 180)
 createTable(7.5, 5); createLaptop(7.5, 5, Math.PI); 
 
 createChair(6, 1, Math.PI / 2);
 createChair(6, 3, Math.PI / 2);
 createChair(9, 1, -Math.PI / 2);
 createChair(9, 3, -Math.PI / 2);
-// Нижний стул тоже развернут на 180
 createChair(7.5, 6, Math.PI); 
 
 // --- ПРАВАЯ ГРУППА ---
@@ -248,15 +252,12 @@ createTable(13, 1, Math.PI / 2); createLaptop(13, 1, Math.PI / 2);
 createTable(14, 1, Math.PI / 2); createLaptop(14, 1, -Math.PI / 2);
 createTable(13, 3, Math.PI / 2); createLaptop(13, 3, Math.PI / 2);
 createTable(14, 3, Math.PI / 2); createLaptop(14, 3, -Math.PI / 2);
-
-// Нижний горизонтальный стол (Ноутбук развернут на 180)
 createTable(13.5, 5); createLaptop(13.5, 5, Math.PI);
 
 createChair(12, 1, Math.PI / 2);
 createChair(12, 3, Math.PI / 2);
 createChair(15, 1, -Math.PI / 2);
 createChair(15, 3, -Math.PI / 2);
-// Нижний стул тоже развернут на 180
 createChair(13.5, 6, Math.PI);
 
 createCooler(4, 1);
