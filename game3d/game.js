@@ -88,6 +88,7 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
 }
 
+// ДЛИННАЯ ЛАМПА (Для кабинетов)
 function createLamp(x, z) {
     const tube = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.2), lampMaterial);
     tube.position.set(x, 2.9, z); 
@@ -104,6 +105,27 @@ function createLamp(x, z) {
         light: light,
         baseIntensity: 3, 
         flickerSpeed: 0.05 + Math.random() * 0.05, 
+        offset: Math.random() * 100
+    });
+}
+
+// КВАДРАТНАЯ LED ПАНЕЛЬ (Для коридора)
+function createCeilingPanel(x, z) {
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 1.2), lampMaterial);
+    panel.position.set(x, 2.95, z); 
+    scene.add(panel);
+
+    const light = new THREE.PointLight(0xeeeeff, 2.5, 12); 
+    light.position.set(x, 2.8, z);
+    light.castShadow = true;
+    light.shadow.mapSize.width = 512;
+    light.shadow.mapSize.height = 512;
+    scene.add(light);
+
+    flickerLights.push({
+        light: light,
+        baseIntensity: 2.5, 
+        flickerSpeed: 0.04 + Math.random() * 0.04, 
         offset: Math.random() * 100
     });
 }
@@ -180,14 +202,10 @@ function createPlant(x, z) {
     group.position.set(x, 0, z); scene.add(group); walls.push({ x, z, width: 0.6, depth: 0.6 });
 }
 
-// ==== БОЛЬШОЙ СТОЛ ДЛЯ ПЕРЕГОВОРНОЙ (2 на 6 метров) ====
 function createConferenceTable(x, z) {
     const group = new THREE.Group();
-    // Столешница: 6 метров в длину, 2 метра в ширину
     const top = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, 2), woodMaterial);
     top.position.y = 1; top.castShadow = true; top.receiveShadow = true; group.add(top);
-    
-    // Ножки
     const legPositions = [[-2.8, 0, -0.8], [2.8, 0, -0.8], [-2.8, 0, 0.8], [2.8, 0, 0.8]];
     legPositions.forEach(([lx, ly, lz]) => {
         const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1, 0.15), darkMaterial);
@@ -195,23 +213,15 @@ function createConferenceTable(x, z) {
     });
     group.position.set(x, 0, z);
     scene.add(group);
-    // Коллизия для большого стола
     walls.push({ x, z, width: 6, depth: 2 });
 }
 
-// ==== ТВ НА СТОЙКЕ ====
 function createTVOnStand(x, z, rotY = 0) {
     const group = new THREE.Group();
-
-    // Экран (светящийся)
     const screen = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.1), laptopScreenMaterial);
     screen.position.y = 1.8; screen.castShadow = true; group.add(screen);
-
-    // Ножка
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8), metalMaterial);
     pole.position.y = 0.6; pole.castShadow = true; group.add(pole);
-
-    // 4 опоры крестом
     for(let i=0; i<4; i++) {
         const leg = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.15), darkMaterial);
         leg.position.y = 0.05;
@@ -219,11 +229,9 @@ function createTVOnStand(x, z, rotY = 0) {
         leg.castShadow = true;
         group.add(leg);
     }
-
     group.position.set(x, 0, z);
-    group.rotation.y = rotY; // Поворот для полуоборота
+    group.rotation.y = rotY; 
     scene.add(group);
-    // Коллизия для ТВ
     walls.push({ x, z, width: 1.5, depth: 1.5 });
 }
 
@@ -244,14 +252,13 @@ const office1_Z1 = 0;
 const office1_Z2 = 8;
 const wallThickness = 0.2; 
 
-createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness); // Верхняя
-createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Левая
-createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Правая
-createWall(6.5, office1_Z2, 7, wallThickness);  // Низ левая
-createWall(15, office1_Z2, 6, wallThickness);   // Низ правая
+createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness); 
+createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); 
+createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); 
+createWall(6.5, office1_Z2, 7, wallThickness);  
+createWall(15, office1_Z2, 6, wallThickness);   
 createSlidingDoor(11, 8, 2, 3, 0.2);
 
-// Мебель
 createTable(7, 1, Math.PI / 2); createLaptop(7, 1, Math.PI / 2); 
 createTable(8, 1, Math.PI / 2); createLaptop(8, 1, -Math.PI / 2); 
 createTable(7, 3, Math.PI / 2); createLaptop(7, 3, Math.PI / 2);
@@ -276,43 +283,42 @@ createLamp(13, 3);
 // =====================================================================
 // ===== КОМНАТА 2: ПЕРЕГОВОРКА =====
 // =====================================================================
-// Начинается с X=18, заканчивается X=30. По Z от 0 до 8.
-
 const conf_X1 = 18;
 const conf_X2 = 30;
 const conf_Z1 = 0;
 const conf_Z2 = 8;
 
-createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); // Верхняя
-createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); // Правая (внешняя)
-createWall(24, conf_Z2, 8, wallThickness);  // Низ (слева от двери)
-createWall(29, conf_Z2, 2, wallThickness);  // Низ (справа от двери)
+createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); 
+createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); 
+createWall(24, conf_Z2, 8, wallThickness);  
+createWall(29, conf_Z2, 2, wallThickness);  
 
-// Дверь в переговорку (по схеме на правой стороне нижней стены, ширина 2)
 createSlidingDoor(28, conf_Z2, 2, 3, 0.2);
 
-// БОЛЬШОЙ СТОЛ (по центру комнаты, смещен вправо)
-// Координаты по схеме: от X=21 до X=27
 createConferenceTable(24, 4);
 
-// СТУЛЬЯ ВОКРУГ СТОЛА (по схеме: 3 сверху, 3 снизу)
-createChair(22, 2.5, 0); // Верхние (смотрят вниз)
-createChair(24, 2.5, 0);
-createChair(26, 2.5, 0);
+createChair(22, 2.5, 0); createChair(24, 2.5, 0); createChair(26, 2.5, 0);
+createChair(22, 5.5, Math.PI); createChair(24, 5.5, Math.PI); createChair(26, 5.5, Math.PI);
 
-createChair(22, 5.5, Math.PI); // Нижние (смотрят вверх)
-createChair(24, 5.5, Math.PI);
-createChair(26, 5.5, Math.PI);
+createTVOnStand(20, 2, -Math.PI / 4); 
 
-// ТВ НА СТОЙКЕ (в левом верхнем углу, в полуоборот)
-// Ставим в координатах X=20, Z=2 и поворачиваем
-createTVOnStand(20, 2, -Math.PI / 4); // Поворот на 45 градусов (полуоборот)
-
-// Лампа в переговорке
 createLamp(24, 4);
 
 // =====================================================================
 // ===== КОНЕЦ КОМНАТЫ 2 =====
+// =====================================================================
+
+
+// =====================================================================
+// ===== КОРИДОР (Квадратные LED панели) =====
+// =====================================================================
+
+createCeilingPanel(8, 9.5);   // Панель 1
+createCeilingPanel(12, 9.5);  // Панель 2
+createCeilingPanel(16, 9.5);  // Панель 3
+
+// =====================================================================
+// ===== КОНЕЦ КОРИДОРА =====
 // =====================================================================
 
 
