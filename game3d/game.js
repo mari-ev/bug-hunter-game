@@ -91,13 +91,11 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
 }
 
-// ИСПРАВЛЕННАЯ ЛАМПА (Теперь точно мерцает)
 function createLamp(x, z) {
     const tube = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.2), lampMaterial);
     tube.position.set(x, 2.9, z); 
     scene.add(tube);
 
-    // Создаем свет
     const light = new THREE.PointLight(0xaaccff, 3, 15); 
     light.position.set(x, 2.7, z);
     light.castShadow = true;
@@ -105,35 +103,38 @@ function createLamp(x, z) {
     light.shadow.mapSize.height = 512;
     scene.add(light);
 
-    // Сохраняем данные для анимации
     flickerLights.push({
         light: light,
-        baseIntensity: 3, // Яркость по умолчанию
+        baseIntensity: 3, 
         flickerSpeed: 0.05 + Math.random() * 0.05, 
         offset: Math.random() * 100
     });
 }
 
-// НОУТБУК
+// НОУТБУК (СВЕТ ПОДНЯТ)
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
     
+    // База
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), laptopBodyMaterial);
     base.position.set(0, 1.06, 0); 
     group.add(base);
     
+    // Корпус экрана
     const screen = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
     screen.position.set(0, 1.18, 0.14); 
     screen.rotation.x = 0.3; 
     group.add(screen);
     
+    // Светящаяся матрица
     const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.21), laptopScreenMaterial);
     display.position.set(0, 1.18, 0.13); 
     display.rotation.x = 0.3; 
     group.add(display);
     
+    // ПРЯМОУГОЛЬНЫЙ ИСТОЧНИК СВЕТА (поднят выше к центру экрана)
     const screenLight = new THREE.RectAreaLight(0xff0000, 2, 0.36, 0.21); 
-    screenLight.position.set(0, 1.18, 0.14); 
+    screenLight.position.set(0, 1.22, 0.14); // Подняли Y с 1.18 до 1.22
     screenLight.rotation.x = 0.3; 
     screenLight.lookAt(0, 0, 0);
     group.add(screenLight);
@@ -231,26 +232,32 @@ createTable(7, 1, Math.PI / 2); createLaptop(7, 1, Math.PI / 2);
 createTable(8, 1, Math.PI / 2); createLaptop(8, 1, -Math.PI / 2); 
 createTable(7, 3, Math.PI / 2); createLaptop(7, 3, Math.PI / 2);
 createTable(8, 3, Math.PI / 2); createLaptop(8, 3, -Math.PI / 2);
-createTable(7.5, 5); createLaptop(7.5, 5, 0); 
+
+// Нижний горизонтальный стол (Ноутбук развернут на 180)
+createTable(7.5, 5); createLaptop(7.5, 5, Math.PI); 
 
 createChair(6, 1, Math.PI / 2);
 createChair(6, 3, Math.PI / 2);
 createChair(9, 1, -Math.PI / 2);
 createChair(9, 3, -Math.PI / 2);
-createChair(7.5, 6, 0);
+// Нижний стул тоже развернут на 180
+createChair(7.5, 6, Math.PI); 
 
 // --- ПРАВАЯ ГРУППА ---
 createTable(13, 1, Math.PI / 2); createLaptop(13, 1, Math.PI / 2);
 createTable(14, 1, Math.PI / 2); createLaptop(14, 1, -Math.PI / 2);
 createTable(13, 3, Math.PI / 2); createLaptop(13, 3, Math.PI / 2);
 createTable(14, 3, Math.PI / 2); createLaptop(14, 3, -Math.PI / 2);
-createTable(13.5, 5); createLaptop(13.5, 5, 0);
+
+// Нижний горизонтальный стол (Ноутбук развернут на 180)
+createTable(13.5, 5); createLaptop(13.5, 5, Math.PI);
 
 createChair(12, 1, Math.PI / 2);
 createChair(12, 3, Math.PI / 2);
 createChair(15, 1, -Math.PI / 2);
 createChair(15, 3, -Math.PI / 2);
-createChair(13.5, 6, 0);
+// Нижний стул тоже развернут на 180
+createChair(13.5, 6, Math.PI);
 
 createCooler(4, 1);
 createPlant(17, 7);
@@ -381,19 +388,15 @@ function updateCamera() {
     camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z);
 }
 
-// ИСПРАВЛЕННОЕ МЕРЦАНИЕ ЛАМП
 let time = 0;
 function updateLamps() {
-    time += 0.05; // Скорость течения времени
+    time += 0.05; 
     flickerLights.forEach(l => {
-        // Используем шум для более реалистичного мерцания
         const noise = Math.sin(time * l.flickerSpeed + l.offset) * Math.cos(time * l.flickerSpeed * 2.3 + l.offset);
-        
-        // Базовая яркость + шум. Иногда лампа гаснет почти полностью
         if (noise > 0.3) {
-            l.light.intensity = l.baseIntensity + 1; // Вспышка
+            l.light.intensity = l.baseIntensity + 1; 
         } else if (noise < -0.3) {
-            l.light.intensity = 0.5; // Почти погасла
+            l.light.intensity = 0.5; 
         } else {
             l.light.intensity = l.baseIntensity;
         }
