@@ -131,8 +131,8 @@ scene.add(floor);
 
 
 // =====================================================================
+// =====================================================================
 // ===== КОМНАТА 1: ОФИС №1 =====
-// Координаты: X от 3 до 18, Z от 0 до 8
 // =====================================================================
 
 const office1_X1 = 3;
@@ -141,33 +141,58 @@ const office1_Z1 = 0;
 const office1_Z2 = 8;
 const wallThickness = 0.5;
 
-// Стены Офиса №1
-createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness); // Верхняя
-createWall((office1_X1 + office1_X2) / 2, office1_Z2, office1_X2 - office1_X1, wallThickness); // Нижняя
-createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Левая
-createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); // Правая
+// Верхняя стена
+createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness);
+// Левая стена
+createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1);
+// Правая стена
+createWall(office1_X2, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1);
 
-// Мебель Офиса №1
-// Левая группа столов
-createTable(7, 3);
-createLaptop(7, 3);
-createChair(7, 4, Math.PI);
-createTable(7, 5);
-createLaptop(7, 5);
-createChair(7, 4, 0);
+// НИЖНЯЯ СТЕНА (с проёмом для двери от X=10 до X=12 на Z=8)
+createWall(6.5, office1_Z2, 7, wallThickness);  // Левая часть
+createWall(15, office1_Z2, 6, wallThickness);   // Правая часть
 
-// Правая группа столов
-createTable(11, 3);
-createLaptop(11, 3);
-createChair(11, 4, Math.PI);
-createTable(11, 5);
-createLaptop(11, 5);
-createChair(11, 4, 0);
+// САМА ДВЕРЬ (сдвижная, от 10 до 12)
+createSlidingDoor(11, 8, 2, 3, 0.2);
 
-// Одиночный стол снизу
-createTable(9, 6.5);
-createLaptop(9, 6.5);
-createChair(9, 5.5, 0);
+// ===== РАССТАНОВКА СТОЛОВ (Как на рисунке) =====
+
+// --- ЛЕВАЯ ГРУППА СТОЛОВ (Центр по X = 7) ---
+// Верхний вертикальный стол (смотрит вверх)
+createTable(7, 2.5, Math.PI / 2); // Повернут на 90 градусов
+createLaptop(7, 2.5, Math.PI / 2);
+createChair(6, 2.5, Math.PI / 2); // Стул слева
+createChair(8, 2.5, -Math.PI / 2); // Стул справа
+
+// Средний вертикальный стол (смотрит вниз)
+createTable(7, 4.5, Math.PI / 2);
+createLaptop(7, 4.5, Math.PI / 2);
+createChair(6, 4.5, Math.PI / 2); // Стул слева
+createChair(8, 4.5, -Math.PI / 2); // Стул справа
+
+// Нижний горизонтальный стол
+createTable(7, 6.5); // Обычный, горизонтальный
+createLaptop(7, 6.5);
+createChair(7, 5.5, 0); // Стул сверху
+
+
+// --- ПРАВАЯ ГРУППА СТОЛОВ (Центр по X = 13) ---
+// Верхний вертикальный стол
+createTable(13, 2.5, Math.PI / 2);
+createLaptop(13, 2.5, Math.PI / 2);
+createChair(12, 2.5, Math.PI / 2);
+createChair(14, 2.5, -Math.PI / 2);
+
+// Средний вертикальный стол
+createTable(13, 4.5, Math.PI / 2);
+createLaptop(13, 4.5, Math.PI / 2);
+createChair(12, 4.5, Math.PI / 2);
+createChair(14, 4.5, -Math.PI / 2);
+
+// Нижний горизонтальный стол
+createTable(13, 6.5);
+createLaptop(13, 6.5);
+createChair(13, 5.5, 0);
 
 // Кулер (Х) в левом верхнем углу
 createCooler(4, 1);
@@ -176,7 +201,7 @@ createCooler(4, 1);
 createPlant(17, 7);
 
 // =====================================================================
-// ===== КОНЕЦ КОМНАТЫ 1 (ОФИС №1) =====
+// ===== КОНЕЦ КОМНАТЫ 1 =====
 // =====================================================================
 
 
