@@ -51,8 +51,8 @@ const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, metalness
 const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x222222 }); 
 const tvBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
 const standMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.5 });
+const sofaMaterial = new THREE.MeshStandardMaterial({ color: 0x8b0000 }); // Темно-бордовый диван
 
-// Экран с ошибкой 404
 const laptopScreenMaterial = new THREE.MeshStandardMaterial({ 
     map: createErrorTexture(), 
     emissive: 0xff0000, 
@@ -137,37 +137,22 @@ function createCeilingPanel(x, z) {
     flickerLights.push({ light: light, baseIntensity: 2.5, flickerSpeed: 0.04 + Math.random() * 0.04, offset: Math.random() * 100 });
 }
 
-// ИСПРАВЛЕННЫЙ НОУТБУК (Экран смотрит на игрока, крышка сзади)
+// НОУТБУК (Экран смотрит на игрока)
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
-    
-    // База (клавиатура)
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), laptopBodyMaterial);
-    base.position.set(0, 1.06, 0); 
-    group.add(base);
+    base.position.set(0, 1.06, 0); group.add(base);
     
-    // ЗАДНЯЯ КРЫШКА (Темный пластик, стоит сзади)
     const screenBack = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
-    screenBack.position.set(0, 1.18, 0.13); // Сзади (от игрока)
-    screenBack.rotation.x = 0.3; 
-    group.add(screenBack);
+    screenBack.position.set(0, 1.18, 0.13); screenBack.rotation.x = 0.3; group.add(screenBack);
 
-    // Экран (Яркая текстура, смотрит на игрока)
     const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.21), laptopScreenMaterial);
-    display.position.set(0, 1.18, 0.11); // Спереди от крышки
-    display.rotation.x = 0.3; 
-    // Ничего не разворачиваем, чтобы смотрело на нас
-    group.add(display);
+    display.position.set(0, 1.18, 0.11); display.rotation.x = 0.3; group.add(display);
     
-    // Свет от экрана (светит на стол)
     const screenLight = new THREE.RectAreaLight(0xff0000, 2, 0.36, 0.21); 
-    screenLight.position.set(0, 1.18, 0.1); 
-    screenLight.rotation.x = 0.3; 
-    group.add(screenLight);
+    screenLight.position.set(0, 1.18, 0.1); screenLight.rotation.x = 0.3; group.add(screenLight);
 
-    group.position.set(x, 0, z); 
-    group.rotation.y = rotY; 
-    scene.add(group);
+    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
 }
 
 function createTable(x, z, rotY = 0) {
@@ -259,6 +244,58 @@ function createTVOnStand(x, z, rotY = 0) {
     walls.push({ x, z, width: 1.5, depth: 1.5 });
 }
 
+// ===== НОВЫЕ ФУНКЦИИ ДЛЯ ХОЛЛА =====
+
+// Диван (Д)
+function createSofa(x, z, rotY = 0) {
+    const group = new THREE.Group();
+    // Сиденье
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(3, 0.4, 1), sofaMaterial);
+    seat.position.y = 0.4; seat.castShadow = true; seat.receiveShadow = true; group.add(seat);
+    // Спинка
+    const back = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 0.2), sofaMaterial);
+    back.position.set(0, 0.8, -0.4); back.castShadow = true; group.add(back);
+    // Подлокотники
+    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 1), sofaMaterial);
+    armL.position.set(-1.4, 0.6, 0); armL.castShadow = true; group.add(armL);
+    const armR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 1), sofaMaterial);
+    armR.position.set(1.4, 0.6, 0); armR.castShadow = true; group.add(armR);
+
+    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+    if (rotY === 0) walls.push({ x, z, width: 3, depth: 1 });
+    else walls.push({ x, z, width: 1, depth: 3 });
+}
+
+// Кофейный столик (КС)
+function createCoffeeTable(x, z) {
+    const group = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1), woodMaterial);
+    top.position.y = 0.5; top.castShadow = true; top.receiveShadow = true; group.add(top);
+    // Ножки
+    const legPositions = [[-0.4, 0, -0.4], [0.4, 0, -0.4], [-0.4, 0, 0.4], [0.4, 0, 0.4]];
+    legPositions.forEach(([lx, ly, lz]) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), darkMaterial);
+        leg.position.set(lx, 0.25, lz); leg.castShadow = true; group.add(leg);
+    });
+    group.position.set(x, 0, z); scene.add(group);
+    walls.push({ x, z, width: 1, depth: 1 });
+}
+
+// Лестница (Л) - Пока просто как объект, без перехода
+function createStairs(x, z) {
+    const group = new THREE.Group();
+    const steps = 5;
+    for (let i = 0; i < steps; i++) {
+        const step = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 0.8), darkMaterial);
+        step.position.set(0, 0.1 + i * 0.2, i * 0.8);
+        step.castShadow = true; step.receiveShadow = true;
+        group.add(step);
+    }
+    group.position.set(x, 0, z);
+    scene.add(group);
+    walls.push({ x, z: z + 2, width: 6, depth: 4 }); // Коллизия
+}
+
 // ===== ПОЛ =====
 const floorGeometry = new THREE.PlaneGeometry(65, 65);
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
@@ -267,7 +304,7 @@ floor.position.set(32.5, 0, 32.5);
 floor.receiveShadow = true;
 scene.add(floor);
 
-// ===== КОМНАТА 1 =====
+// ===== КОМНАТА 1: ОФИС №1 =====
 const office1_X1 = 3; const office1_X2 = 18; const office1_Z1 = 0; const office1_Z2 = 8; const wallThickness = 0.2; 
 
 createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness); 
@@ -294,7 +331,7 @@ createPlant(17, 7);
 createLamp(7, 3);   
 createLamp(13, 3);  
 
-// ===== КОМНАТА 2 =====
+// ===== КОМНАТА 2: ПЕРЕГОВОРКА =====
 const conf_X1 = 18; const conf_X2 = 30; const conf_Z1 = 0; const conf_Z2 = 8;
 
 createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); 
@@ -313,9 +350,42 @@ createChair(27.5, 1, -Math.PI / 2); createChair(27.5, 3, -Math.PI / 2); createCh
 
 createTVOnStand(21, 2, Math.PI / 4); 
 createWhiteboard(18.1, 4, Math.PI / 2);
-
 createLamp(26, 3); 
 createLamp(22, 2); 
+
+// ===== КОМНАТА 3: ХОЛЛ / ЗОНА ОТДЫХА =====
+const hall_X1 = 30; const hall_X2 = 50; const hall_Z1 = 0; const hall_Z2 = 15;
+
+// Стены Холла
+createWall((hall_X1 + hall_X2) / 2, hall_Z1, hall_X2 - hall_X1, wallThickness); // Верхняя
+createWall(hall_X2, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); // Правая
+createWall(hall_X1, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); // Левая
+
+// Нижняя стена с дверью от X=43 до X=45
+createWall(36.5, hall_Z2, 13, wallThickness); // Левая часть
+createWall(47.5, hall_Z2, 5, wallThickness);  // Правая часть
+createSlidingDoor(44, hall_Z2, 2, 3, 0.2);    // Дверь
+
+// Мебель в Холле
+// Лестница в левом верхнем углу
+createStairs(35, 1);
+
+// Большой диван по центру (лицом к лестнице)
+createSofa(35, 6, Math.PI);
+createCoffeeTable(35, 8);
+
+// Вертикальный диван у правой стены
+createSofa(47, 5, Math.PI / 2);
+createCoffeeTable(45, 5);
+
+// Декор
+createPlant(48, 1);
+createCooler(49, 14); // Вместо огнетушителя (пока нет функции)
+createLamp(36, 6); // Свет над диваном
+
+// =====================================================================
+// ===== КОНЕЦ КОМНАТЫ 3 =====
+// =====================================================================
 
 // ===== КОРИДОР =====
 createCeilingPanel(8, 9.5);   
@@ -451,33 +521,4 @@ function updateCamera() {
     camera.lookAt(player.position.x, player.position.y + 0.6, player.position.z);
 }
 
-let time = 0;
-function updateLamps() {
-    time += 0.05; 
-    flickerLights.forEach(l => {
-        const noise = Math.sin(time * l.flickerSpeed + l.offset) * Math.cos(time * l.flickerSpeed * 2.3 + l.offset);
-        if (noise > 0.3) {
-            l.light.intensity = l.baseIntensity + 1; 
-        } else if (noise < -0.3) {
-            l.light.intensity = 0.5; 
-        } else {
-            l.light.intensity = l.baseIntensity;
-        }
-    });
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    updatePlayer();
-    updateDoors();
-    updateCamera();
-    updateLamps(); 
-    renderer.render(scene, camera);
-}
-animate();
-
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
+let
