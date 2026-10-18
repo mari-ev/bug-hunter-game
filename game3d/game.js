@@ -223,6 +223,7 @@ function createPlant(x, z) {
     group.position.set(x, 0, z); scene.add(group); walls.push({ x, z, width: 0.6, depth: 0.6 });
 }
 
+// БОЛЬШОЙ СТОЛ
 function createConferenceTable(x, z) {
     const group = new THREE.Group();
     const top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 6), woodMaterial);
@@ -309,41 +310,34 @@ const conf_X2 = 30;
 const conf_Z1 = 0;
 const conf_Z2 = 8;
 
-createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); // Верхняя
-createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); // Правая
-createWall(conf_X1, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); // Левая (общая со офисом)
+createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); 
+createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); 
+createWall(conf_X1, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); 
 
-// НИЖНЯЯ СТЕНА (с проёмом для двери от X=21 до X=23)
-createWall(19.5, conf_Z2, 3, wallThickness); // Левая часть стены
-createWall(26.5, conf_Z2, 7, wallThickness); // Правая часть стены
+createWall(19.5, conf_Z2, 3, wallThickness); 
+createWall(26.5, conf_Z2, 7, wallThickness); 
 
-// Дверь
 createSlidingDoor(22, conf_Z2, 2, 3, 0.2); 
 
-// Кулер в левом нижнем углу (подальше от двери)
 createCooler(19, 7);
 
-// СТОЛ (от X=25 до 27)
-createConferenceTable(26, 4);
+createConferenceTable(26, 3);
 
-// Стулья слева
-createChair(24.5, 2, -Math.PI / 2); 
-createChair(24.5, 4, -Math.PI / 2); 
-createChair(24.5, 6, -Math.PI / 2);
+// СТУЛЬЯ (Развернуты лицом к столу)
+// Стулья слева (смотрят вправо, на стол)
+createChair(24.5, 1, Math.PI / 2); 
+createChair(24.5, 3, Math.PI / 2); 
+createChair(24.5, 5, Math.PI / 2);
 
-// Стулья справа
-createChair(27.5, 2, Math.PI / 2); 
-createChair(27.5, 4, Math.PI / 2); 
-createChair(27.5, 6, Math.PI / 2);
+// Стулья справа (смотрят влево, на стол)
+createChair(27.5, 1, -Math.PI / 2); 
+createChair(27.5, 3, -Math.PI / 2); 
+createChair(27.5, 5, -Math.PI / 2);
 
-// ТВ РАЗВЕРНУТ В СТОРОНУ СТОЛА
 createTVOnStand(21, 2, Math.PI / 4); 
-
-// МАРКЕРНАЯ ДОСКА НА ЛЕВОЙ СТЕНЕ
 createWhiteboard(18.1, 4, Math.PI / 2);
 
-// ЛАМПЫ (Центр стола и ТВ)
-createLamp(26, 4); 
+createLamp(26, 3); 
 createLamp(22, 2); 
 
 // =====================================================================
