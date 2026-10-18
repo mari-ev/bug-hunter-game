@@ -309,34 +309,42 @@ const conf_X2 = 30;
 const conf_Z1 = 0;
 const conf_Z2 = 8;
 
-createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); 
-createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); 
-createWall(conf_X1, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); 
+createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); // Верхняя
+createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); // Правая
+createWall(conf_X1, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); // Левая (общая со офисом)
 
+// НИЖНЯЯ СТЕНА (с проёмом для двери от X=21 до X=23)
+createWall(19.5, conf_Z2, 3, wallThickness); // Левая часть стены
+createWall(26.5, conf_Z2, 7, wallThickness); // Правая часть стены
+
+// Дверь
+createSlidingDoor(22, conf_Z2, 2, 3, 0.2); 
+
+// Кулер в левом нижнем углу (подальше от двери)
 createCooler(19, 7);
-createWall(21.5, conf_Z2, 5, wallThickness); 
-createWall(28, conf_Z2, 4, wallThickness);   
-createSlidingDoor(23, conf_Z2, 2, 3, 0.2); 
 
-// СТОЛ НА КООРДИНАТАХ X=26 (от 25 до 27)
+// СТОЛ (от X=25 до 27)
 createConferenceTable(26, 4);
 
-// Стулья слева (смотрят вправо)
+// Стулья слева
 createChair(24.5, 2, -Math.PI / 2); 
 createChair(24.5, 4, -Math.PI / 2); 
 createChair(24.5, 6, -Math.PI / 2);
 
-// Стулья справа (смотрят влево)
+// Стулья справа
 createChair(27.5, 2, Math.PI / 2); 
 createChair(27.5, 4, Math.PI / 2); 
 createChair(27.5, 6, Math.PI / 2);
 
+// ТВ РАЗВЕРНУТ В СТОРОНУ СТОЛА
 createTVOnStand(21, 2, Math.PI / 4); 
+
+// МАРКЕРНАЯ ДОСКА НА ЛЕВОЙ СТЕНЕ
 createWhiteboard(18.1, 4, Math.PI / 2);
 
-// ИСПРАВЛЕННЫЕ ЛАМПЫ:
-createLamp(26, 4); // Ровно по центру стола
-createLamp(22, 2); // Над ТВ и доской
+// ЛАМПЫ (Центр стола и ТВ)
+createLamp(26, 4); 
+createLamp(22, 2); 
 
 // =====================================================================
 // ===== КОНЕЦ КОМНАТЫ 2 =====
@@ -424,7 +432,6 @@ function canMoveTo(x, z) {
     return true;
 }
 
-let doorTimer = 0;
 function updateDoors() {
     const triggerDist = 4; 
     doors.forEach(door => {
