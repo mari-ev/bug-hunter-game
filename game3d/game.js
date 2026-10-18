@@ -521,4 +521,33 @@ function updateCamera() {
     camera.lookAt(player.position.x, player.position.y + 0.6, player.position.z);
 }
 
-let
+let time = 0;
+function updateLamps() {
+    time += 0.05; 
+    flickerLights.forEach(l => {
+        const noise = Math.sin(time * l.flickerSpeed + l.offset) * Math.cos(time * l.flickerSpeed * 2.3 + l.offset);
+        if (noise > 0.3) {
+            l.light.intensity = l.baseIntensity + 1; 
+        } else if (noise < -0.3) {
+            l.light.intensity = 0.5; 
+        } else {
+            l.light.intensity = l.baseIntensity;
+        }
+    });
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    updatePlayer();
+    updateDoors();
+    updateCamera();
+    updateLamps(); 
+    renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
