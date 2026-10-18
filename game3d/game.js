@@ -48,16 +48,15 @@ const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
 const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
 const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.7 });
 const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
-const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x222222 }); // Темный пластик
 const tvBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
 const standMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.5 });
 
-// Делаем экран очень ярким, чтобы его было видно даже в темноте
 const laptopScreenMaterial = new THREE.MeshStandardMaterial({ 
     map: createErrorTexture(), 
     emissive: 0xff0000, 
     emissiveIntensity: 2.5,
-    side: THREE.DoubleSide // Экран будет виден с обеих сторон
+    side: THREE.DoubleSide 
 });
 
 const potMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
@@ -137,7 +136,7 @@ function createCeilingPanel(x, z) {
     flickerLights.push({ light: light, baseIntensity: 2.5, flickerSpeed: 0.04 + Math.random() * 0.04, offset: Math.random() * 100 });
 }
 
-// ИСПРАВЛЕННЫЙ НОУТБУК
+// ИСПРАВЛЕННЫЙ НОУТБУК (С задней крышкой и правильным поворотом)
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
     
@@ -146,17 +145,25 @@ function createLaptop(x, z, rotY = 0) {
     base.position.set(0, 1.06, 0); 
     group.add(base);
     
-    // Экран (яркая текстура)
+    // ЗАДНЯЯ КРЫШКА (Темный пластик)
+    const screenBack = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
+    screenBack.position.set(0, 1.18, -0.12); // Сзади
+    screenBack.rotation.x = -0.3; 
+    group.add(screenBack);
+
+    // Экран (Яркая текстура)
     const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.21), laptopScreenMaterial);
-    display.position.set(0, 1.18, 0.01); // Чуть впереди базы
-    display.rotation.x = -0.3; // Наклоняем назад, чтобы смотрело на игрока
+    display.position.set(0, 1.18, -0.10); // Чуть спереди от задней крышки
+    display.rotation.x = -0.3; 
+    // Важно: разворачиваем экран лицом к игроку (внутрь комнаты)
+    display.rotation.y = Math.PI; 
     group.add(display);
     
-    // Прямоугольный свет (идет от экрана вперед, на стол)
+    // Свет от экрана (светит на стол)
     const screenLight = new THREE.RectAreaLight(0xff0000, 2, 0.36, 0.21); 
-    screenLight.position.set(0, 1.18, 0.02); 
+    screenLight.position.set(0, 1.18, -0.08); 
     screenLight.rotation.x = -0.3; 
-    screenLight.lookAt(0, 0, 1); // Светит строго вперед (на стул)
+    screenLight.rotation.y = Math.PI;
     group.add(screenLight);
 
     group.position.set(x, 0, z); 
