@@ -49,6 +49,8 @@ const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
 const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.7 });
 const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
 const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+const tvBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+const standMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.5 });
 
 const laptopScreenMaterial = new THREE.MeshStandardMaterial({ 
     map: createErrorTexture(), 
@@ -86,15 +88,7 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     group.position.set(x, height / 2, z);
     group.rotation.y = rotY;
     scene.add(group);
-    doors.push({ 
-        group, 
-        startX: x, 
-        startZ: z, 
-        width, 
-        rotY, 
-        openAmount: 0, 
-        isHorizontal: rotY === 0 
-    });
+    doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
 }
 
 function createLamp(x, z) {
@@ -109,12 +103,7 @@ function createLamp(x, z) {
     light.shadow.mapSize.height = 512;
     scene.add(light);
 
-    flickerLights.push({
-        light: light,
-        baseIntensity: 3, 
-        flickerSpeed: 0.05 + Math.random() * 0.05, 
-        offset: Math.random() * 100
-    });
+    flickerLights.push({ light: light, baseIntensity: 3, flickerSpeed: 0.05 + Math.random() * 0.05, offset: Math.random() * 100 });
 }
 
 function createWhiteboard(x, z, rotY = 0) {
@@ -143,25 +132,43 @@ function createCeilingPanel(x, z) {
     light.shadow.mapSize.height = 512;
     scene.add(light);
 
-    flickerLights.push({
-        light: light,
-        baseIntensity: 2.5, 
-        flickerSpeed: 0.04 + Math.random() * 0.04, 
-        offset: Math.random() * 100
-    });
+    flickerLights.push({ light: light, baseIntensity: 2.5, flickerSpeed: 0.04 + Math.random() * 0.04, offset: Math.random() * 100 });
 }
 
+// ИСПРАВЛЕННЫЙ НОУТБУК (Свет только вперед)
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
+    
+    // База
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), laptopBodyMaterial);
-    base.position.set(0, 1.06, 0); group.add(base);
-    const screen = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
-    screen.position.set(0, 1.18, 0.14); screen.rotation.x = 0.3; group.add(screen);
+    base.position.set(0, 1.06, 0); 
+    group.add(base);
+    
+    // Корпус экрана (сзади)
+    const screenBack = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), laptopBodyMaterial);
+    screenBack.position.set(0, 1.18, 0.14); 
+    screenBack.rotation.x = 0.3; 
+    group.add(screenBack);
+
+    // Светящаяся матрица (спереди, лицом к пользователю)
     const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.21), laptopScreenMaterial);
-    display.position.set(0, 1.18, 0.13); display.rotation.x = 0.3; group.add(display);
-    const screenLight = new THREE.RectAreaLight(0xff0000, 3, 0.36, 0.21); 
-    screenLight.position.set(0, 1.18, 0.15); screenLight.rotation.x = 0.3; screenLight.lookAt(0, 0, 0); group.add(screenLight);
-    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+    display.position.set(0, 1.18, 0.15); // Сдвинули вперед
+    display.rotation.x = 0.3; 
+    group.add(display);
+    
+    // ИСПОЛЬЗУЕМ SPOTLIGHT (Светит как фонарик в одну сторону)
+    const screenLight = new THREE.SpotLight(0xff0000, 5, 5, Math.PI / 4, 0.5, 1); // Цвет, яркость, дистанция, угол
+    screenLight.position.set(0, 1.18, 0.16); 
+    screenLight.target.position.set(0, 0, 1); // Светит вперед по оси Z
+    screenLight.castShadow = false;
+    
+    // Добавляем и свет, и его цель в группу
+    group.add(screenLight);
+    group.add(screenLight.target);
+
+    group.position.set(x, 0, z); 
+    group.rotation.y = rotY; 
+    scene.add(group);
 }
 
 function createTable(x, z, rotY = 0) {
@@ -223,7 +230,6 @@ function createPlant(x, z) {
     group.position.set(x, 0, z); scene.add(group); walls.push({ x, z, width: 0.6, depth: 0.6 });
 }
 
-// БОЛЬШОЙ СТОЛ
 function createConferenceTable(x, z) {
     const group = new THREE.Group();
     const top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 6), woodMaterial);
@@ -240,20 +246,17 @@ function createConferenceTable(x, z) {
 
 function createTVOnStand(x, z, rotY = 0) {
     const group = new THREE.Group();
-    const screen = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.1), laptopScreenMaterial);
-    screen.position.y = 1.8; screen.castShadow = true; group.add(screen);
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8), metalMaterial);
+    const tvBody = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.15), tvBodyMaterial);
+    tvBody.position.y = 1.8; tvBody.castShadow = true; group.add(tvBody);
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.0), laptopScreenMaterial);
+    screen.position.set(0, 1.8, 0.08); group.add(screen);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8), standMaterial);
     pole.position.y = 0.6; pole.castShadow = true; group.add(pole);
     for(let i=0; i<4; i++) {
-        const leg = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.15), darkMaterial);
-        leg.position.y = 0.05;
-        leg.rotation.y = (i * Math.PI / 2);
-        leg.castShadow = true;
-        group.add(leg);
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.15), standMaterial);
+        leg.position.y = 0.05; leg.rotation.y = (i * Math.PI / 2); leg.castShadow = true; group.add(leg);
     }
-    group.position.set(x, 0, z);
-    group.rotation.y = rotY; 
-    scene.add(group);
+    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
     walls.push({ x, z, width: 1.5, depth: 1.5 });
 }
 
@@ -265,14 +268,8 @@ floor.position.set(32.5, 0, 32.5);
 floor.receiveShadow = true;
 scene.add(floor);
 
-// =====================================================================
-// ===== КОМНАТА 1: ОФИС №1 =====
-// =====================================================================
-const office1_X1 = 3;
-const office1_X2 = 18;
-const office1_Z1 = 0;
-const office1_Z2 = 8;
-const wallThickness = 0.2; 
+// ===== КОМНАТА 1 =====
+const office1_X1 = 3; const office1_X2 = 18; const office1_Z1 = 0; const office1_Z2 = 8; const wallThickness = 0.2; 
 
 createWall((office1_X1 + office1_X2) / 2, office1_Z1, office1_X2 - office1_X1, wallThickness); 
 createWall(office1_X1, (office1_Z1 + office1_Z2) / 2, wallThickness, office1_Z2 - office1_Z1); 
@@ -297,18 +294,9 @@ createCooler(4, 1);
 createPlant(17, 7);
 createLamp(7, 3);   
 createLamp(13, 3);  
-// =====================================================================
-// ===== КОНЕЦ КОМНАТЫ 1 =====
-// =====================================================================
 
-
-// =====================================================================
-// ===== КОМНАТА 2: ПЕРЕГОВОРКА =====
-// =====================================================================
-const conf_X1 = 18;
-const conf_X2 = 30;
-const conf_Z1 = 0;
-const conf_Z2 = 8;
+// ===== КОМНАТА 2 =====
+const conf_X1 = 18; const conf_X2 = 30; const conf_Z1 = 0; const conf_Z2 = 8;
 
 createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); 
 createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); 
@@ -318,21 +306,11 @@ createWall(19.5, conf_Z2, 3, wallThickness);
 createWall(26.5, conf_Z2, 7, wallThickness); 
 
 createSlidingDoor(22, conf_Z2, 2, 3, 0.2); 
-
 createCooler(19, 7);
-
 createConferenceTable(26, 3);
 
-// СТУЛЬЯ (Развернуты лицом к столу)
-// Стулья слева (смотрят вправо, на стол)
-createChair(24.5, 1, Math.PI / 2); 
-createChair(24.5, 3, Math.PI / 2); 
-createChair(24.5, 5, Math.PI / 2);
-
-// Стулья справа (смотрят влево, на стол)
-createChair(27.5, 1, -Math.PI / 2); 
-createChair(27.5, 3, -Math.PI / 2); 
-createChair(27.5, 5, -Math.PI / 2);
+createChair(24.5, 1, Math.PI / 2); createChair(24.5, 3, Math.PI / 2); createChair(24.5, 5, Math.PI / 2);
+createChair(27.5, 1, -Math.PI / 2); createChair(27.5, 3, -Math.PI / 2); createChair(27.5, 5, -Math.PI / 2);
 
 createTVOnStand(21, 2, Math.PI / 4); 
 createWhiteboard(18.1, 4, Math.PI / 2);
@@ -340,22 +318,13 @@ createWhiteboard(18.1, 4, Math.PI / 2);
 createLamp(26, 3); 
 createLamp(22, 2); 
 
-// =====================================================================
-// ===== КОНЕЦ КОМНАТЫ 2 =====
-// =====================================================================
-
-
-// =====================================================================
 // ===== КОРИДОР =====
-// =====================================================================
 createCeilingPanel(8, 9.5);   
 createCeilingPanel(12, 9.5);  
 createCeilingPanel(16, 9.5);  
 createCeilingPanel(20, 9.5);  
 createCeilingPanel(24, 9.5);  
 createCeilingPanel(28, 9.5);  
-// =====================================================================
-
 
 // ===== ПЕРСОНАЖ =====
 const playerTexture = new THREE.TextureLoader().load('assets/player.png');
