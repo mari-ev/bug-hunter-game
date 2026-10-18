@@ -46,12 +46,13 @@ const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
 const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x4a3a2a });
 const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
 const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
+const wireMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 }); // Для проводов лофтовых ламп
 const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.7 });
 const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
 const laptopBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x222222 }); 
 const tvBodyMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
 const standMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.5 });
-const sofaMaterial = new THREE.MeshStandardMaterial({ color: 0x8b0000 }); // Темно-бордовый диван
+const sofaMaterial = new THREE.MeshStandardMaterial({ color: 0x8b0000 }); 
 
 const laptopScreenMaterial = new THREE.MeshStandardMaterial({ 
     map: createErrorTexture(), 
@@ -93,6 +94,7 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
 }
 
+// ДЛИННАЯ ЛАМПА
 function createLamp(x, z) {
     const tube = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.2), lampMaterial);
     tube.position.set(x, 2.9, z); 
@@ -106,6 +108,39 @@ function createLamp(x, z) {
     scene.add(light);
 
     flickerLights.push({ light: light, baseIntensity: 3, flickerSpeed: 0.05 + Math.random() * 0.05, offset: Math.random() * 100 });
+}
+
+// ЛОФТОВАЯ ЛАМПА (Свисает с потолка)
+function createLoftLamp(x, z) {
+    const group = new THREE.Group();
+    
+    // Провод
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2, 8), wireMaterial);
+    wire.position.set(x, 2, z);
+    group.add(wire);
+
+    // Абажур (конус)
+    const shade = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.5, 16), darkMaterial);
+    shade.position.set(x, 1, z);
+    shade.castShadow = true;
+    group.add(shade);
+
+    // Лампочка внутри
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), lampMaterial);
+    bulb.position.set(x, 0.85, z);
+    group.add(bulb);
+
+    // Источник света
+    const light = new THREE.PointLight(0xffccaa, 2.5, 12); // Тёплый свет
+    light.position.set(x, 0.8, z);
+    light.castShadow = true;
+    light.shadow.mapSize.width = 512;
+    light.shadow.mapSize.height = 512;
+    group.add(light);
+
+    scene.add(group);
+
+    flickerLights.push({ light: light, baseIntensity: 2.5, flickerSpeed: 0.03 + Math.random() * 0.03, offset: Math.random() * 100 });
 }
 
 function createWhiteboard(x, z, rotY = 0) {
@@ -122,6 +157,7 @@ function createWhiteboard(x, z, rotY = 0) {
     scene.add(group);
 }
 
+// КВАДРАТНАЯ LED ПАНЕЛЬ
 function createCeilingPanel(x, z) {
     const panel = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 1.2), lampMaterial);
     panel.position.set(x, 2.95, z); 
@@ -137,7 +173,6 @@ function createCeilingPanel(x, z) {
     flickerLights.push({ light: light, baseIntensity: 2.5, flickerSpeed: 0.04 + Math.random() * 0.04, offset: Math.random() * 100 });
 }
 
-// НОУТБУК (Экран смотрит на игрока)
 function createLaptop(x, z, rotY = 0) {
     const group = new THREE.Group();
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), laptopBodyMaterial);
@@ -244,18 +279,13 @@ function createTVOnStand(x, z, rotY = 0) {
     walls.push({ x, z, width: 1.5, depth: 1.5 });
 }
 
-// ===== НОВЫЕ ФУНКЦИИ ДЛЯ ХОЛЛА =====
-
 // Диван (Д)
 function createSofa(x, z, rotY = 0) {
     const group = new THREE.Group();
-    // Сиденье
     const seat = new THREE.Mesh(new THREE.BoxGeometry(3, 0.4, 1), sofaMaterial);
     seat.position.y = 0.4; seat.castShadow = true; seat.receiveShadow = true; group.add(seat);
-    // Спинка
     const back = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 0.2), sofaMaterial);
     back.position.set(0, 0.8, -0.4); back.castShadow = true; group.add(back);
-    // Подлокотники
     const armL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 1), sofaMaterial);
     armL.position.set(-1.4, 0.6, 0); armL.castShadow = true; group.add(armL);
     const armR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 1), sofaMaterial);
@@ -271,7 +301,6 @@ function createCoffeeTable(x, z) {
     const group = new THREE.Group();
     const top = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1), woodMaterial);
     top.position.y = 0.5; top.castShadow = true; top.receiveShadow = true; group.add(top);
-    // Ножки
     const legPositions = [[-0.4, 0, -0.4], [0.4, 0, -0.4], [-0.4, 0, 0.4], [0.4, 0, 0.4]];
     legPositions.forEach(([lx, ly, lz]) => {
         const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), darkMaterial);
@@ -281,7 +310,7 @@ function createCoffeeTable(x, z) {
     walls.push({ x, z, width: 1, depth: 1 });
 }
 
-// Лестница (Л) - Пока просто как объект, без перехода
+// Лестница
 function createStairs(x, z) {
     const group = new THREE.Group();
     const steps = 5;
@@ -293,7 +322,7 @@ function createStairs(x, z) {
     }
     group.position.set(x, 0, z);
     scene.add(group);
-    walls.push({ x, z: z + 2, width: 6, depth: 4 }); // Коллизия
+    walls.push({ x, z: z + 2, width: 6, depth: 4 }); 
 }
 
 // ===== ПОЛ =====
@@ -356,32 +385,28 @@ createLamp(22, 2);
 // ===== КОМНАТА 3: ХОЛЛ / ЗОНА ОТДЫХА =====
 const hall_X1 = 30; const hall_X2 = 50; const hall_Z1 = 0; const hall_Z2 = 15;
 
-// Стены Холла
-createWall((hall_X1 + hall_X2) / 2, hall_Z1, hall_X2 - hall_X1, wallThickness); // Верхняя
-createWall(hall_X2, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); // Правая
-createWall(hall_X1, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); // Левая
+createWall((hall_X1 + hall_X2) / 2, hall_Z1, hall_X2 - hall_X1, wallThickness); 
+createWall(hall_X2, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); 
+createWall(hall_X1, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); 
 
-// Нижняя стена с дверью от X=43 до X=45
-createWall(36.5, hall_Z2, 13, wallThickness); // Левая часть
-createWall(47.5, hall_Z2, 5, wallThickness);  // Правая часть
-createSlidingDoor(44, hall_Z2, 2, 3, 0.2);    // Дверь
+createWall(36.5, hall_Z2, 13, wallThickness); 
+createWall(47.5, hall_Z2, 5, wallThickness);  
+createSlidingDoor(44, hall_Z2, 2, 3, 0.2);    
 
-// Мебель в Холле
-// Лестница в левом верхнем углу
 createStairs(35, 1);
-
-// Большой диван по центру (лицом к лестнице)
 createSofa(35, 6, Math.PI);
 createCoffeeTable(35, 8);
-
-// Вертикальный диван у правой стены
 createSofa(47, 5, Math.PI / 2);
 createCoffeeTable(45, 5);
 
-// Декор
 createPlant(48, 1);
-createCooler(49, 14); // Вместо огнетушителя (пока нет функции)
-createLamp(36, 6); // Свет над диваном
+createCooler(49, 14); 
+
+// ЗАМЕНА ЛАМП В ХОЛЛЕ НА ЛОФТОВЫЕ (4 штуки)
+createLoftLamp(35, 4); 
+createLoftLamp(45, 4);
+createLoftLamp(35, 10);
+createLoftLamp(45, 10);
 
 // =====================================================================
 // ===== КОНЕЦ КОМНАТЫ 3 =====
@@ -394,6 +419,11 @@ createCeilingPanel(16, 9.5);
 createCeilingPanel(20, 9.5);  
 createCeilingPanel(24, 9.5);  
 createCeilingPanel(28, 9.5);  
+createCeilingPanel(32, 9.5);  // Продолжаем ряд
+createCeilingPanel(36, 9.5);  
+createCeilingPanel(40, 9.5);  
+createCeilingPanel(44, 9.5);  
+createCeilingPanel(48, 9.5);  
 
 // ===== ПЕРСОНАЖ =====
 const playerTexture = new THREE.TextureLoader().load('assets/player.png');
