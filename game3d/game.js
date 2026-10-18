@@ -20,7 +20,7 @@ renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // ===== СВЕТ (Базовый) =====
-const ambientLight = new THREE.AmbientLight(0x222222, 1.5);
+const ambientLight = new THREE.AmbientLight(0x333333, 1.5); 
 scene.add(ambientLight);
 
 // ===== ТЕКСТУРА ЭКРАНА =====
@@ -59,6 +59,7 @@ const laptopScreenMaterial = new THREE.MeshStandardMaterial({
 const potMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
 const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x2e8b57 });
 const lampMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2 });
+const boardMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc, emissive: 0xcccccc, emissiveIntensity: 0.8 });
 
 // ===== МАССИВЫ =====
 const walls = [];
@@ -85,10 +86,17 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     group.position.set(x, height / 2, z);
     group.rotation.y = rotY;
     scene.add(group);
-    doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
+    doors.push({ 
+        group, 
+        startX: x, 
+        startZ: z, 
+        width, 
+        rotY, 
+        openAmount: 0, 
+        isHorizontal: rotY === 0 
+    });
 }
 
-// ДЛИННАЯ ЛАМПА
 function createLamp(x, z) {
     const tube = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.2), lampMaterial);
     tube.position.set(x, 2.9, z); 
@@ -109,7 +117,20 @@ function createLamp(x, z) {
     });
 }
 
-// КВАДРАТНАЯ LED ПАНЕЛЬ
+function createWhiteboard(x, z, rotY = 0) {
+    const group = new THREE.Group();
+    const board = new THREE.Mesh(new THREE.BoxGeometry(4, 2, 0.1), boardMaterial);
+    board.position.set(0, 1.5, 0);
+    group.add(board);
+    const boardLight = new THREE.PointLight(0xffffff, 2, 8);
+    boardLight.position.set(0, 1.5, 0.5); 
+    boardLight.castShadow = true;
+    group.add(boardLight);
+    group.position.set(x, 0, z);
+    group.rotation.y = rotY;
+    scene.add(group);
+}
+
 function createCeilingPanel(x, z) {
     const panel = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 1.2), lampMaterial);
     panel.position.set(x, 2.95, z); 
@@ -297,15 +318,25 @@ createWall(21.5, conf_Z2, 5, wallThickness);
 createWall(28, conf_Z2, 4, wallThickness);   
 createSlidingDoor(23, conf_Z2, 2, 3, 0.2); 
 
-createConferenceTable(27, 4);
-createChair(25.5, 2, -Math.PI / 2); createChair(25.5, 4, -Math.PI / 2); createChair(25.5, 6, -Math.PI / 2);
-createChair(28.5, 2, Math.PI / 2); createChair(28.5, 4, Math.PI / 2); createChair(28.5, 6, Math.PI / 2);
+// СТОЛ НА КООРДИНАТАХ X=26 (от 25 до 27)
+createConferenceTable(26, 4);
 
-createTVOnStand(21, 2, -Math.PI / 4); 
+// Стулья слева (смотрят вправо)
+createChair(24.5, 2, -Math.PI / 2); 
+createChair(24.5, 4, -Math.PI / 2); 
+createChair(24.5, 6, -Math.PI / 2);
 
-// ДОБАВЛЯЕМ ДВЕ ДЛИННЫЕ ЛАМПЫ В ПЕРЕГОВОРКУ
-createLamp(21, 4); // Лампа над ТВ
-createLamp(27, 4); // Лампа над столом
+// Стулья справа (смотрят влево)
+createChair(27.5, 2, Math.PI / 2); 
+createChair(27.5, 4, Math.PI / 2); 
+createChair(27.5, 6, Math.PI / 2);
+
+createTVOnStand(21, 2, Math.PI / 4); 
+createWhiteboard(18.1, 4, Math.PI / 2);
+
+// ИСПРАВЛЕННЫЕ ЛАМПЫ:
+createLamp(26, 4); // Ровно по центру стола
+createLamp(22, 2); // Над ТВ и доской
 
 // =====================================================================
 // ===== КОНЕЦ КОМНАТЫ 2 =====
@@ -313,7 +344,7 @@ createLamp(27, 4); // Лампа над столом
 
 
 // =====================================================================
-// ===== КОРИДОР (Квадратные LED панели) =====
+// ===== КОРИДОР =====
 // =====================================================================
 createCeilingPanel(8, 9.5);   
 createCeilingPanel(12, 9.5);  
@@ -393,16 +424,24 @@ function canMoveTo(x, z) {
     return true;
 }
 
+let doorTimer = 0;
 function updateDoors() {
-    const triggerDist = 3;
+    const triggerDist = 4; 
     doors.forEach(door => {
         const dx = player.position.x - door.group.position.x;
         const dz = player.position.z - door.group.position.z;
         const dist = Math.sqrt(dx * dx + dz * dz);
+        
         const targetAmount = dist < triggerDist ? 1 : 0;
-        door.openAmount += (targetAmount - door.openAmount) * 0.1;
-        if (door.isHorizontal) door.group.position.x = door.startX + (door.openAmount * door.width);
-        else door.group.position.z = door.startZ + (door.openAmount * door.width);
+        door.openAmount += (targetAmount - door.openAmount) * 0.08;
+        
+        if (Math.abs(targetAmount - door.openAmount) > 0.01) {
+            if (door.isHorizontal) {
+                door.group.position.x = door.startX + (door.openAmount * door.width);
+            } else {
+                door.group.position.z = door.startZ + (door.openAmount * door.width);
+            }
+        }
     });
 }
 
