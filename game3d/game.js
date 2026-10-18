@@ -88,7 +88,7 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
 }
 
-// ДЛИННАЯ ЛАМПА (Для кабинетов)
+// ДЛИННАЯ ЛАМПА
 function createLamp(x, z) {
     const tube = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.2), lampMaterial);
     tube.position.set(x, 2.9, z); 
@@ -109,7 +109,7 @@ function createLamp(x, z) {
     });
 }
 
-// КВАДРАТНАЯ LED ПАНЕЛЬ (Для коридора)
+// КВАДРАТНАЯ LED ПАНЕЛЬ
 function createCeilingPanel(x, z) {
     const panel = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 1.2), lampMaterial);
     panel.position.set(x, 2.95, z); 
@@ -204,16 +204,16 @@ function createPlant(x, z) {
 
 function createConferenceTable(x, z) {
     const group = new THREE.Group();
-    const top = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, 2), woodMaterial);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 6), woodMaterial);
     top.position.y = 1; top.castShadow = true; top.receiveShadow = true; group.add(top);
-    const legPositions = [[-2.8, 0, -0.8], [2.8, 0, -0.8], [-2.8, 0, 0.8], [2.8, 0, 0.8]];
+    const legPositions = [[-0.8, 0, -2.8], [0.8, 0, -2.8], [-0.8, 0, 2.8], [0.8, 0, 2.8]];
     legPositions.forEach(([lx, ly, lz]) => {
         const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1, 0.15), darkMaterial);
         leg.position.set(lx, 0.5, lz); leg.castShadow = true; group.add(leg);
     });
     group.position.set(x, 0, z);
     scene.add(group);
-    walls.push({ x, z, width: 6, depth: 2 });
+    walls.push({ x, z, width: 2, depth: 6 });
 }
 
 function createTVOnStand(x, z, rotY = 0) {
@@ -290,19 +290,22 @@ const conf_Z2 = 8;
 
 createWall((conf_X1 + conf_X2) / 2, conf_Z1, conf_X2 - conf_X1, wallThickness); 
 createWall(conf_X2, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); 
-createWall(24, conf_Z2, 8, wallThickness);  
-createWall(29, conf_Z2, 2, wallThickness);  
+createWall(conf_X1, (conf_Z1 + conf_Z2) / 2, wallThickness, conf_Z2 - conf_Z1); 
 
-createSlidingDoor(28, conf_Z2, 2, 3, 0.2);
+createCooler(19, 7);
+createWall(21.5, conf_Z2, 5, wallThickness); 
+createWall(28, conf_Z2, 4, wallThickness);   
+createSlidingDoor(23, conf_Z2, 2, 3, 0.2); 
 
-createConferenceTable(24, 4);
+createConferenceTable(27, 4);
+createChair(25.5, 2, -Math.PI / 2); createChair(25.5, 4, -Math.PI / 2); createChair(25.5, 6, -Math.PI / 2);
+createChair(28.5, 2, Math.PI / 2); createChair(28.5, 4, Math.PI / 2); createChair(28.5, 6, Math.PI / 2);
 
-createChair(22, 2.5, 0); createChair(24, 2.5, 0); createChair(26, 2.5, 0);
-createChair(22, 5.5, Math.PI); createChair(24, 5.5, Math.PI); createChair(26, 5.5, Math.PI);
+createTVOnStand(21, 2, -Math.PI / 4); 
 
-createTVOnStand(20, 2, -Math.PI / 4); 
-
-createLamp(24, 4);
+// ДОБАВЛЯЕМ ДВЕ ДЛИННЫЕ ЛАМПЫ В ПЕРЕГОВОРКУ
+createLamp(21, 4); // Лампа над ТВ
+createLamp(27, 4); // Лампа над столом
 
 // =====================================================================
 // ===== КОНЕЦ КОМНАТЫ 2 =====
@@ -312,13 +315,12 @@ createLamp(24, 4);
 // =====================================================================
 // ===== КОРИДОР (Квадратные LED панели) =====
 // =====================================================================
-
-createCeilingPanel(8, 9.5);   // Панель 1
-createCeilingPanel(12, 9.5);  // Панель 2
-createCeilingPanel(16, 9.5);  // Панель 3
-
-// =====================================================================
-// ===== КОНЕЦ КОРИДОРА =====
+createCeilingPanel(8, 9.5);   
+createCeilingPanel(12, 9.5);  
+createCeilingPanel(16, 9.5);  
+createCeilingPanel(20, 9.5);  
+createCeilingPanel(24, 9.5);  
+createCeilingPanel(28, 9.5);  
 // =====================================================================
 
 
