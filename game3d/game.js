@@ -439,7 +439,7 @@ createLoftLamp(45, 4);
 createLoftLamp(35, 10);
 createLoftLamp(45, 10);
 
-// --- КОМНАТА 4: ОФИС С КАМОРКОЙ (Справа от Холла) ---
+// --- КОМНАТА 4: ОФИС С КАМОРКОЙ (Финальная версия) ---
 const newOffice_X1 = 50; 
 const newOffice_X2 = 65; 
 const newOffice_Z1 = 0;  
@@ -454,27 +454,29 @@ createWall(53.5, newOffice_Z2, 7, wallThickness); // Левая часть (50-5
 createWall(62, newOffice_Z2, 6, wallThickness);   // Правая часть (59-65)
 createSlidingDoor(58, newOffice_Z2, 2, 3, 0.2);   // Входная дверь (центр 58)
 
-// 2. СТЕНЫ КАМОРКИ (Квадрат 50-54 по X, 0-4 по Z)
-createWall(54, 1, wallThickness, 2); // Верхняя часть правой стены
-createWall(54, 5.5, wallThickness, 3); // Нижняя часть правой стены
-createSlidingDoor(54, 3, 2, 3, 0.2, Math.PI / 2); // Дверь в каморку
-createWall(52, 4, 4, wallThickness); // Нижняя стена каморки
+// 2. СТЕНЫ И ДВЕРЬ КАМОРКИ
+// Правая стена каморки (сплошная часть от Z=0 до Z=2)
+createWall(54, 1, wallThickness, 2); 
+
+// Дверь в каморку (в проеме от Z=2 до Z=4)
+// Ставим её вертикально (rotY = Math.PI / 2). 
+// Чтобы она уезжала в сторону Z=0 (вверх), мы даем ей отрицательную ширину сдвига.
+const kamorkaDoor = createSlidingDoor(54, 3, 2, 3, 0.2, Math.PI / 2); 
+kamorkaDoor.isHorizontal = false; // Говорим функции, что она двигается по оси Z
+// Функция по умолчанию сдвигает по Z в плюс. Чтобы она ехала вверх (в минус), 
+// мы вручную меняем её начальную точку и направление сдвига при инициализации.
+kamorkaDoor.startZ = 3; 
+kamorkaDoor.openDir = -1; // <--- Вот эта переменная заставит её ехать вверх (к Z=0)
+
+// Нижняя стена каморки (сплошная, от X=50 до X=54)
+createWall(52, 4, 4, wallThickness); 
 
 // 3. СТОЛ В ЛЕВОМ НИЖНЕМ УГЛУ
 createTable(50.5, 5, Math.PI / 2); 
 createLaptop(50.5, 5, Math.PI / 2);
 createChair(51.5, 5, -Math.PI / 2); 
 
-// 4. СТОЛЫ У КАМОРКИ
-createTable(54.5, 5, Math.PI / 2); 
-createLaptop(54.5, 5, Math.PI / 2);
-createChair(55.5, 5, -Math.PI / 2); 
-
-createTable(55.5, 5, Math.PI / 2); 
-createLaptop(55.5, 5, Math.PI / 2);
-createChair(56.5, 5, -Math.PI / 2); 
-
-// 5. СТОЛЫ В ПРАВОЙ ЧАСТИ
+// 4. СТОЛЫ В ПРАВОЙ ЧАСТИ
 createTable(60.5, 1, Math.PI / 2);
 createLaptop(60.5, 1, Math.PI / 2);
 createChair(59.5, 1, Math.PI / 2);
@@ -491,15 +493,20 @@ createTable(61.5, 3, Math.PI / 2);
 createLaptop(61.5, 3, Math.PI / 2);
 createChair(62.5, 3, -Math.PI / 2);
 
-// 6. ДЕКОР И СВЕТ
-// Вместо кулера в каморке теперь КОРОБКИ
-createBox(51, 1, 1, 1, 1);         // Большая коробка в углу
-createBox(52, 1.2, 0.6, 0.6, 0.6); // Коробка поменьше рядом
-createBox(51.2, 2, 0.5, 0.5, 0.5); // Еще одна сверху/рядом
-createBox(52, 2.5, 0.8, 0.8, 0.8); // Коробка ближе к двери
+// 5. ДЕКОР И СВЕТ
+createBox(51, 1, 1, 1, 1);         
+createBox(52, 1.2, 0.6, 0.6, 0.6); 
+createBox(51.2, 2, 0.5, 0.5, 0.5); 
+createBox(52, 2.5, 0.8, 0.8, 0.8); 
 
-createCooler(64.4, 6.4); // Кулер в правом нижнем углу (в основном зале оставляем)
-createPlant(64, 2);      // Цветок в правом верхнем углу
+createCooler(64.4, 6.4); 
+createPlant(64, 2);      
+createSnackMachine(60.2, 6.5, Math.PI); 
+
+createLamp(58, 2);       
+createLamp(51, 5);       
+createLamp(61, 2);       
+createLamp(51.5, 1.5);
 
 // АВТОМАТ СО СНЕКАМИ (Справа от входной двери)
 createSnackMachine(60.2, 6.5, Math.PI); 
@@ -599,7 +606,7 @@ function updateDoors() {
         door.openAmount += (targetAmount - door.openAmount) * 0.08;
         if (Math.abs(targetAmount - door.openAmount) > 0.01) {
             if (door.isHorizontal) door.group.position.x = door.startX + (door.openAmount * door.width);
-            else door.group.position.z = door.startZ + (door.openAmount * door.width);
+            else door.group.position.z = door.startZ + (door.openAmount * door.width * (door.openDir || 1));
         }
     });
 }
