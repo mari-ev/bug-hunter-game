@@ -362,46 +362,52 @@ createLoftLamp(45, 4);
 createLoftLamp(35, 10);
 createLoftLamp(45, 10);
 
-// --- КОМНАТА 4: ОФИС С КАМОРКОЙ (По эскизу на верхней границе) ---
-const newOffice_X1 = 48; // Левая граница комнаты
-const newOffice_X2 = 56; // Правая граница комнаты
-const newOffice_Z1 = 0;  // Верхняя стена (примыкает к верхней границе карты)
-const newOffice_Z2 = 7;  // Нижняя стена (по твоему условию Z=7)
+// --- КОМНАТА 4: ОФИС С КАМОРКОЙ (Справа от Холла) ---
+const newOffice_X1 = 50; 
+const newOffice_X2 = 65; 
+const newOffice_Z1 = 0;  
+const newOffice_Z2 = 7;  
 
-// 1. Основные стены комнаты
-createWall((newOffice_X1 + newOffice_X2) / 2, newOffice_Z1, 8, wallThickness); // Верхняя стена
-createWall(newOffice_X1, 3.5, wallThickness, 7); // Левая стена
-createWall(newOffice_X2, 3.5, wallThickness, 7); // Правая стена
+// 1. Внешние стены офиса
+createWall((newOffice_X1 + newOffice_X2) / 2, newOffice_Z1, 15, wallThickness); // Верхняя стена (от 50 до 65)
+createWall(newOffice_X2, 3.5, wallThickness, 7); // Правая стена (по краю карты X=65)
 
-// Нижняя стена с дверью ровно 2 метра по центру (от X=51 до X=53)
-createWall(49.5, newOffice_Z2, 3, wallThickness); // Стена слева от двери
-createWall(54.5, newOffice_Z2, 3, wallThickness); // Стена справа от двери
-createSlidingDoor(52, newOffice_Z2, 2, 3, 0.2);   // Входная дверь (2 метра)
+// --- ИСПРАВЛЕННАЯ НИЖНЯЯ СТЕНА (Z=7) ---
+// Левая часть стены: от X=50 до X=57 (длина 7). Центр X=53.5
+createWall(53.5, newOffice_Z2, 7, wallThickness); 
+// Правая часть стены: от X=59 до X=65 (длина 6). Центр X=62
+createWall(62, newOffice_Z2, 6, wallThickness); 
+// Входная дверь: начинается на X=57, заканчивается на X=59. Ширина ровно 2 метра, центр на 58.
+createSlidingDoor(58, newOffice_Z2, 2, 3, 0.2); 
 
-// 2. КАМОРКА (Слева, стены идут от X=50, Z=4)
-// Горизонтальная стена каморки: от X=50 до X=54 (длина 4), центр X=52, Z=4
-createWall(52, 4, 4, wallThickness); 
-// Вертикальная стена каморки: от Z=4 до Z=7 (длина 3), центр X=50, Z=5.5
-createWall(50, 5.5, wallThickness, 3); 
+// 2. СТЕНЫ КАМОРКИ (Квадрат от X=50 до X=54, от Z=0 до Z=4)
+// Правая стена каморки (идет от Z=0 до Z=4)
+createWall(54, 2, wallThickness, 4); 
+// Нижняя стена каморки (идет от X=50 до X=54, с проемом для двери 2 метра)
+createWall(51, 4, 2, wallThickness); // Левая часть нижней стены (50-52)
+createWall(53.5, 4, 1, wallThickness); // Правая часть нижней стены (53-54)
+// Дверь в каморку (размер 2 метра, открывается вбок)
+createSlidingDoor(52.5, 4, 2, 3, 0.2); 
+
 // Внутри каморки (декор)
-createCooler(49, 1); 
+createCooler(51, 1); 
 
-// 3. СТОЛЫ (Вплотную к стене каморки, начало X=50, Z=4)
-// Первый стол: ширина 1 (до 51), длина 2 (до 6). Центр: X=50.5, Z=5.
-createTable(50.5, 5, Math.PI / 2);
-createLaptop(50.5, 5, Math.PI / 2);
-createChair(49.5, 5, -Math.PI / 2); // Стул (кружок) слева от стола
+// 3. СТОЛЫ (Вплотную к правой стене каморки, начало X=54, Z=4)
+// Первый стол (вертикальный, ширина 1, длина 2): центр X=54.5, Z=5
+createTable(54.5, 5, Math.PI / 2);
+createLaptop(54.5, 5, Math.PI / 2);
+createChair(55.5, 5, -Math.PI / 2); // Стул (кружок) справа от стола
 
-// Второй стол (вплотную к первому): начало X=51, Z=4. Центр: X=51.5, Z=5.
-createTable(51.5, 5, Math.PI / 2);
-createLaptop(51.5, 5, Math.PI / 2);
-createChair(52.5, 5, Math.PI / 2); // Стул справа от второго стола
+// Второй стол (вплотную): центр X=55.5, Z=5
+createTable(55.5, 5, Math.PI / 2);
+createLaptop(55.5, 5, Math.PI / 2);
+createChair(56.5, 5, -Math.PI / 2); // Стул справа от второго стола
 
 // 4. ДЕКОР И СВЕТ
-createPlant(55, 6); // Цветок в правом нижнем углу
-createLamp(52, 2);  // Лампа над входом
-createLamp(51, 5);  // Лампа над столами
-createLamp(49, 2);  // Лампа в каморке
+createPlant(64, 6); // Цветок в правом дальнем углу
+createLamp(58, 2);  // Лампа над входом (по центру двери)
+createLamp(55, 5);  // Лампа над столами
+createLamp(52, 2);  // Лампа в каморке
 
 // --- КОРИДОР (LED Панели) ---
 // Прямой участок (вдоль офисов и переговорки)
