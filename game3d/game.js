@@ -291,21 +291,19 @@ function createStairs(x, z) {
     const steps = 5; // 5 ступенек
     
     for (let i = 0; i < steps; i++) {
-        // Каждая ступенька: ширина 1 метр (по X), высота 0.2 (по Y), глубина 2 метра (по Z)
+        // Ширина 1м, высота 0.2м, глубина 2м
         const step = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 2), darkMaterial);
-        
-        // Сдвигаем каждую следующую ступеньку вправо (по X) и вверх (по Y)
+        // Сдвигаем вправо (по X) и вверх (по Y)
         step.position.set(i * 1, 0.1 + i * 0.2, 0); 
         step.castShadow = true; 
         step.receiveShadow = true;
         group.add(step);
     }
     
-    // Ставим лестницу в нужные координаты (X=35, Z=0)
     group.position.set(x, 0, z); 
     scene.add(group);
     
-    // Коллизия для лестницы, чтобы сквозь неё не проходили (ширина 5, глубина 2)
+    // Коллизия: центр лестницы сдвинут на половину ширины (2.5) и глубины (1)
     walls.push({ x: x + 2.5, z: z + 1, width: 5, depth: 2 }); 
 }
 
@@ -346,7 +344,7 @@ createWall(47.5, hall_Z2, 5, wallThickness);
 createSlidingDoor(44, hall_Z2, 2, 3, 0.2);    
 
 // Лестница вдоль верхней стены (вход от стены)
-createStairs(35, 0);
+createStairs(35, 1);
 
 // Диваны развернуты лицом к столикам
 createSofa(35, 6, 0);        // Смотрит на столик вниз
