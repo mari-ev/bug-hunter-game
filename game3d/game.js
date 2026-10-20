@@ -288,19 +288,25 @@ function createCoffeeTable(x, z) {
 // Лестница (пока просто декор)
 function createStairs(x, z) {
     const group = new THREE.Group();
-    const steps = 5;
+    const steps = 5; // 5 ступенек
+    
     for (let i = 0; i < steps; i++) {
-        // Делаем ступени шириной 0.8, длиной 6 (вдоль стены)
-        const step = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 6), darkMaterial);
-        // Сдвигаем каждую ступеньку по оси X (вдоль стены)
-        step.position.set(i * 0.8, 0.1 + i * 0.2, 0); 
-        step.castShadow = true; step.receiveShadow = true;
+        // Каждая ступенька: ширина 1 метр (по X), высота 0.2 (по Y), глубина 2 метра (по Z)
+        const step = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 2), darkMaterial);
+        
+        // Сдвигаем каждую следующую ступеньку вправо (по X) и вверх (по Y)
+        step.position.set(i * 1, 0.1 + i * 0.2, 0); 
+        step.castShadow = true; 
+        step.receiveShadow = true;
         group.add(step);
     }
+    
+    // Ставим лестницу в нужные координаты (X=35, Z=0)
     group.position.set(x, 0, z); 
     scene.add(group);
-    // Коллизия для лестницы
-    walls.push({ x: x + 2, z: z, width: 4, depth: 6 }); 
+    
+    // Коллизия для лестницы, чтобы сквозь неё не проходили (ширина 5, глубина 2)
+    walls.push({ x: x + 2.5, z: z + 1, width: 5, depth: 2 }); 
 }
 
 /* =====================================================================
@@ -340,7 +346,7 @@ createWall(47.5, hall_Z2, 5, wallThickness);
 createSlidingDoor(44, hall_Z2, 2, 3, 0.2);    
 
 // Лестница вдоль верхней стены (вход от стены)
-createStairs(31, 3); 
+createStairs(35, 0);
 
 // Диваны развернуты лицом к столикам
 createSofa(35, 6, 0);        // Смотрит на столик вниз
