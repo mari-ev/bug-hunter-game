@@ -108,17 +108,17 @@ function createLamp(x, z) {
 // Лофтовая подвесная лампа
 function createLoftLamp(x, z) {
     const group = new THREE.Group();
-    // Провод стал короче (1 метр вместо 2)
-    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1, 8), wireMaterial);
-    wire.position.set(x, 2.5, z); group.add(wire);
+    // Провод стал еще короче (0.5 метра)
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8), wireMaterial);
+    wire.position.set(x, 2.75, z); group.add(wire);
     
     const shade = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.5, 16), darkMaterial);
-    shade.position.set(x, 2, z); shade.castShadow = true; group.add(shade);
+    shade.position.set(x, 2.5, z); shade.castShadow = true; group.add(shade);
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), lampMaterial);
-    bulb.position.set(x, 1.85, z); group.add(bulb);
+    bulb.position.set(x, 2.35, z); group.add(bulb);
     
     const light = new THREE.PointLight(0xffccaa, 0, 12); 
-    light.position.set(x, 1.8, z); light.castShadow = false; 
+    light.position.set(x, 2.3, z); light.castShadow = false; 
     group.add(light);
     
     scene.add(group);
@@ -290,10 +290,17 @@ function createStairs(x, z) {
     const group = new THREE.Group();
     const steps = 5;
     for (let i = 0; i < steps; i++) {
-        const step = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 0.8), darkMaterial);
-        step.position.set(0, 0.1 + i * 0.2, i * 0.8); step.castShadow = true; step.receiveShadow = true; group.add(step);
+        // Делаем ступени шириной 0.8, длиной 6 (вдоль стены)
+        const step = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 6), darkMaterial);
+        // Сдвигаем каждую ступеньку по оси X (вдоль стены)
+        step.position.set(i * 0.8, 0.1 + i * 0.2, 0); 
+        step.castShadow = true; step.receiveShadow = true;
+        group.add(step);
     }
-    group.position.set(x, 0, z); scene.add(group); walls.push({ x, z: z + 2, width: 6, depth: 4 }); 
+    group.position.set(x, 0, z); 
+    scene.add(group);
+    // Коллизия для лестницы
+    walls.push({ x: x + 2, z: z, width: 4, depth: 6 }); 
 }
 
 /* =====================================================================
@@ -325,11 +332,31 @@ createTVOnStand(21, 2, Math.PI / 4); createWhiteboard(18.1, 4, Math.PI / 2); cre
 
 // --- КОМНАТА 3: ХОЛЛ / ЛОББИ ---
 const hall_X1 = 30; const hall_X2 = 50; const hall_Z1 = 0; const hall_Z2 = 15;
-createWall((hall_X1 + hall_X2) / 2, hall_Z1, hall_X2 - hall_X1, wallThickness); createWall(hall_X2, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); createWall(hall_X1, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); 
-createWall(36.5, hall_Z2, 13, wallThickness); createWall(47.5, hall_Z2, 5, wallThickness); createSlidingDoor(44, hall_Z2, 2, 3, 0.2);    
-createStairs(35, 1); createSofa(35, 6, Math.PI); createCoffeeTable(35, 8); createSofa(47, 5, Math.PI / 2); createCoffeeTable(45, 5);
-createPlant(48, 1); createCooler(49, 14); 
-createLoftLamp(35, 4); createLoftLamp(45, 4); createLoftLamp(35, 10); createLoftLamp(45, 10);
+createWall((hall_X1 + hall_X2) / 2, hall_Z1, hall_X2 - hall_X1, wallThickness); 
+createWall(hall_X2, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); 
+createWall(hall_X1, (hall_Z1 + hall_Z2) / 2, wallThickness, hall_Z2 - hall_Z1); 
+createWall(36.5, hall_Z2, 13, wallThickness); 
+createWall(47.5, hall_Z2, 5, wallThickness); 
+createSlidingDoor(44, hall_Z2, 2, 3, 0.2);    
+
+// Лестница вдоль верхней стены (вход от стены)
+createStairs(31, 3); 
+
+// Диваны развернуты лицом к столикам
+createSofa(35, 6, 0);        // Смотрит на столик вниз
+createCoffeeTable(35, 8);
+
+createSofa(47, 5, -Math.PI / 2); // Смотрит на столик влево
+createCoffeeTable(45, 5);
+
+createPlant(48, 1); 
+createCooler(49, 14); 
+
+// 4 ЛОФТОВЫЕ ЛАМПЫ
+createLoftLamp(35, 4); 
+createLoftLamp(45, 4);
+createLoftLamp(35, 10);
+createLoftLamp(45, 10);
 
 // --- КОРИДОР (LED Панели) ---
 // Прямой участок (вдоль офисов и переговорки)
