@@ -204,6 +204,83 @@ function createChair(x, z, rotY = 0) {
     group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
 }
 
+// Автомат со снеками
+function createSnackMachine(x, z, rotY = 0) {
+    const group = new THREE.Group();
+    
+    // Корпус автомата
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 0.8), new THREE.MeshStandardMaterial({ color: 0x8b0000 })); // Темно-красный
+    body.position.y = 1; body.castShadow = true; body.receiveShadow = true; group.add(body);
+    
+    // Стекло (витрина)
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.4, 0.05), new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.5 }));
+    glass.position.set(0, 1.2, 0.42); group.add(glass);
+    
+    // Внутренняя подсветка витрины
+    const light = new THREE.PointLight(0xffffff, 1.5, 3);
+    light.position.set(0, 1.2, 0.5); group.add(light);
+    
+    // Панель управления (справа)
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1, 0.05), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+    panel.position.set(0.45, 1.2, 0.43); group.add(panel);
+    
+    // Кнопки
+    const btnMat = new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 1 });
+    for(let i=0; i<3; i++) {
+        const btn = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.02), btnMat);
+        btn.position.set(0.45, 1.4 - i*0.2, 0.45); group.add(btn);
+    }
+    
+    // Полка с снеками (просто цветные кубики внутри)
+    const snackColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff];
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            const snack = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.2, 0.1), new THREE.MeshStandardMaterial({ color: snackColors[(i+j)%5] }));
+            snack.position.set(-0.3 + i*0.25, 0.7 + j*0.4, 0.35); group.add(snack);
+        }
+    }
+
+    group.position.set(x, 0, z); 
+    group.rotation.y = rotY; 
+    scene.add(group); 
+    
+    // Коллизия (чтобы игрок не проходил сквозь него)
+    if (rotY === 0) walls.push({ x, z, width: 1.2, depth: 0.8 });
+    else walls.push({ x, z, width: 0.8, depth: 1.2 });
+}
+
+// Картонная коробка (для склада/каморки)
+function createBox(x, z, sizeX = 0.8, sizeY = 0.8, sizeZ = 0.8, rotY = 0) {
+    const group = new THREE.Group();
+    
+    // Материал картона
+    const boxMat = new THREE.MeshStandardMaterial({ color: 0xb8956a, roughness: 0.9 });
+    const tapeMat = new THREE.MeshStandardMaterial({ color: 0xd4c4a8, roughness: 0.5 });
+    
+    // Основа коробки
+    const box = new THREE.Mesh(new THREE.BoxGeometry(sizeX, sizeY, sizeZ), boxMat);
+    box.position.y = sizeY / 2; 
+    box.castShadow = true; box.receiveShadow = true; 
+    group.add(box);
+    
+    // Скотч (полоска сверху)
+    const tape = new THREE.Mesh(new THREE.BoxGeometry(sizeX * 1.01, 0.01, sizeZ * 0.2), tapeMat);
+    tape.position.y = sizeY + 0.005; 
+    group.add(tape);
+    
+    // Вторая полоска скотча (крест-накрест)
+    const tape2 = new THREE.Mesh(new THREE.BoxGeometry(sizeX * 0.2, 0.01, sizeZ * 1.01), tapeMat);
+    tape2.position.y = sizeY + 0.006; 
+    group.add(tape2);
+
+    group.position.set(x, 0, z); 
+    group.rotation.y = rotY; 
+    scene.add(group); 
+    
+    // Коллизия (чтобы игрок не проходил сквозь коробку)
+    walls.push({ x, z, width: sizeX, depth: sizeZ });
+}
+
 // Кулер с водой
 function createCooler(x, z) {
     const group = new THREE.Group();
@@ -369,45 +446,69 @@ const newOffice_Z1 = 0;
 const newOffice_Z2 = 7;  
 
 // 1. Внешние стены офиса
-createWall((newOffice_X1 + newOffice_X2) / 2, newOffice_Z1, 15, wallThickness); // Верхняя стена (от 50 до 65)
-createWall(newOffice_X2, 3.5, wallThickness, 7); // Правая стена (по краю карты X=65)
+createWall((newOffice_X1 + newOffice_X2) / 2, newOffice_Z1, 15, wallThickness); // Верхняя стена
+createWall(newOffice_X2, 3.5, wallThickness, 7); // Правая стена (X=65)
 
-// --- ИСПРАВЛЕННАЯ НИЖНЯЯ СТЕНА (Z=7) ---
-// Левая часть стены: от X=50 до X=57 (длина 7). Центр X=53.5
-createWall(53.5, newOffice_Z2, 7, wallThickness); 
-// Правая часть стены: от X=59 до X=65 (длина 6). Центр X=62
-createWall(62, newOffice_Z2, 6, wallThickness); 
-// Входная дверь: начинается на X=57, заканчивается на X=59. Ширина ровно 2 метра, центр на 58.
-createSlidingDoor(58, newOffice_Z2, 2, 3, 0.2); 
+// Нижняя стена (Z=7) с дверью 2 метра (с 57 до 59)
+createWall(53.5, newOffice_Z2, 7, wallThickness); // Левая часть (50-57)
+createWall(62, newOffice_Z2, 6, wallThickness);   // Правая часть (59-65)
+createSlidingDoor(58, newOffice_Z2, 2, 3, 0.2);   // Входная дверь (центр 58)
 
-// 2. СТЕНЫ КАМОРКИ (Квадрат от X=50 до X=54, от Z=0 до Z=4)
-// Правая стена каморки (идет от Z=0 до Z=4)
-createWall(54, 2, wallThickness, 4); 
-// Нижняя стена каморки (идет от X=50 до X=54, с проемом для двери 2 метра)
-createWall(51, 4, 2, wallThickness); // Левая часть нижней стены (50-52)
-createWall(53.5, 4, 1, wallThickness); // Правая часть нижней стены (53-54)
-// Дверь в каморку (размер 2 метра, открывается вбок)
-createSlidingDoor(52.5, 4, 2, 3, 0.2); 
+// 2. СТЕНЫ КАМОРКИ (Квадрат 50-54 по X, 0-4 по Z)
+createWall(54, 1, wallThickness, 2); // Верхняя часть правой стены
+createWall(54, 5.5, wallThickness, 3); // Нижняя часть правой стены
+createSlidingDoor(54, 3, 2, 3, 0.2, Math.PI / 2); // Дверь в каморку
+createWall(52, 4, 4, wallThickness); // Нижняя стена каморки
 
-// Внутри каморки (декор)
-createCooler(51, 1); 
+// 3. СТОЛ В ЛЕВОМ НИЖНЕМ УГЛУ
+createTable(50.5, 5, Math.PI / 2); 
+createLaptop(50.5, 5, Math.PI / 2);
+createChair(51.5, 5, -Math.PI / 2); 
 
-// 3. СТОЛЫ (Вплотную к правой стене каморки, начало X=54, Z=4)
-// Первый стол (вертикальный, ширина 1, длина 2): центр X=54.5, Z=5
-createTable(54.5, 5, Math.PI / 2);
+// 4. СТОЛЫ У КАМОРКИ
+createTable(54.5, 5, Math.PI / 2); 
 createLaptop(54.5, 5, Math.PI / 2);
-createChair(55.5, 5, -Math.PI / 2); // Стул (кружок) справа от стола
+createChair(55.5, 5, -Math.PI / 2); 
 
-// Второй стол (вплотную): центр X=55.5, Z=5
-createTable(55.5, 5, Math.PI / 2);
+createTable(55.5, 5, Math.PI / 2); 
 createLaptop(55.5, 5, Math.PI / 2);
-createChair(56.5, 5, -Math.PI / 2); // Стул справа от второго стола
+createChair(56.5, 5, -Math.PI / 2); 
 
-// 4. ДЕКОР И СВЕТ
-createPlant(64, 6); // Цветок в правом дальнем углу
-createLamp(58, 2);  // Лампа над входом (по центру двери)
-createLamp(55, 5);  // Лампа над столами
-createLamp(52, 2);  // Лампа в каморке
+// 5. СТОЛЫ В ПРАВОЙ ЧАСТИ
+createTable(60.5, 1, Math.PI / 2);
+createLaptop(60.5, 1, Math.PI / 2);
+createChair(59.5, 1, Math.PI / 2);
+
+createTable(61.5, 1, Math.PI / 2);
+createLaptop(61.5, 1, Math.PI / 2);
+createChair(62.5, 1, -Math.PI / 2);
+
+createTable(60.5, 3, Math.PI / 2);
+createLaptop(60.5, 3, Math.PI / 2);
+createChair(59.5, 3, Math.PI / 2);
+
+createTable(61.5, 3, Math.PI / 2);
+createLaptop(61.5, 3, Math.PI / 2);
+createChair(62.5, 3, -Math.PI / 2);
+
+// 6. ДЕКОР И СВЕТ
+// Вместо кулера в каморке теперь КОРОБКИ
+createBox(51, 1, 1, 1, 1);         // Большая коробка в углу
+createBox(52, 1.2, 0.6, 0.6, 0.6); // Коробка поменьше рядом
+createBox(51.2, 2, 0.5, 0.5, 0.5); // Еще одна сверху/рядом
+createBox(52, 2.5, 0.8, 0.8, 0.8); // Коробка ближе к двери
+
+createCooler(64.4, 6.4); // Кулер в правом нижнем углу (в основном зале оставляем)
+createPlant(64, 2);      // Цветок в правом верхнем углу
+
+// АВТОМАТ СО СНЕКАМИ (Справа от входной двери)
+createSnackMachine(60.2, 6.5, Math.PI); 
+
+createLamp(58, 2);       // Лампа над входом
+createLamp(51, 5);       // Лампа над новым столом
+createLamp(55, 5);       // Лампа над столами у каморки
+createLamp(61, 2);       // Лампа над правым рядом
+createLamp(52, 2);       // Лампа в каморке
 
 // --- КОРИДОР (LED Панели) ---
 // Прямой участок (вдоль офисов и переговорки)
