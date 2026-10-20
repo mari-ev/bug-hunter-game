@@ -108,15 +108,17 @@ function createLamp(x, z) {
 // Лофтовая подвесная лампа
 function createLoftLamp(x, z) {
     const group = new THREE.Group();
-    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2, 8), wireMaterial);
-    wire.position.set(x, 2, z); group.add(wire);
+    // Провод стал короче (1 метр вместо 2)
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1, 8), wireMaterial);
+    wire.position.set(x, 2.5, z); group.add(wire);
+    
     const shade = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.5, 16), darkMaterial);
-    shade.position.set(x, 1, z); shade.castShadow = true; group.add(shade);
+    shade.position.set(x, 2, z); shade.castShadow = true; group.add(shade);
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), lampMaterial);
-    bulb.position.set(x, 0.85, z); group.add(bulb);
+    bulb.position.set(x, 1.85, z); group.add(bulb);
     
     const light = new THREE.PointLight(0xffccaa, 0, 12); 
-    light.position.set(x, 0.8, z); light.castShadow = false; 
+    light.position.set(x, 1.8, z); light.castShadow = false; 
     group.add(light);
     
     scene.add(group);
@@ -330,7 +332,25 @@ createPlant(48, 1); createCooler(49, 14);
 createLoftLamp(35, 4); createLoftLamp(45, 4); createLoftLamp(35, 10); createLoftLamp(45, 10);
 
 // --- КОРИДОР (LED Панели) ---
-createCeilingPanel(8, 9.5); createCeilingPanel(12, 9.5); createCeilingPanel(16, 9.5); createCeilingPanel(20, 9.5); createCeilingPanel(24, 9.5); createCeilingPanel(28, 9.5); createCeilingPanel(32, 9.5); createCeilingPanel(36, 9.5); createCeilingPanel(40, 9.5); createCeilingPanel(44, 9.5); createCeilingPanel(48, 9.5);  
+// Прямой участок (вдоль офисов и переговорки)
+createCeilingPanel(8, 9.5); 
+createCeilingPanel(12, 9.5); 
+createCeilingPanel(16, 9.5); 
+createCeilingPanel(20, 9.5); 
+createCeilingPanel(24, 9.5); 
+createCeilingPanel(28, 9.5); 
+
+// Поворот направо (вдоль нижней стены холла)
+createCeilingPanel(32, 16.5);
+createCeilingPanel(36, 16.5);
+createCeilingPanel(40, 16.5);
+createCeilingPanel(44, 16.5);
+createCeilingPanel(48, 16.5);
+
+// Поворот налево (вдоль правой стены холла)
+createCeilingPanel(51.5, 12);
+createCeilingPanel(51.5, 8);
+createCeilingPanel(51.5, 4);
 
 /* =====================================================================
    8. ПЕРСОНАЖ
