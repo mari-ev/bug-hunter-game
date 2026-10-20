@@ -87,6 +87,7 @@ function createSlidingDoor(x, z, width, height, depth, rotY = 0) {
     door.castShadow = true; door.receiveShadow = true; group.add(door);
     group.position.set(x, height / 2, z); group.rotation.y = rotY; scene.add(group);
     doors.push({ group, startX: x, startZ: z, width, rotY, openAmount: 0, isHorizontal: rotY === 0 });
+    return group;:
 }
 
 /* =====================================================================
