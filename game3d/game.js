@@ -362,6 +362,47 @@ createLoftLamp(45, 4);
 createLoftLamp(35, 10);
 createLoftLamp(45, 10);
 
+// --- КОМНАТА 4: ОФИС С КАМОРКОЙ (По эскизу на верхней границе) ---
+const newOffice_X1 = 48; // Левая граница комнаты
+const newOffice_X2 = 56; // Правая граница комнаты
+const newOffice_Z1 = 0;  // Верхняя стена (примыкает к верхней границе карты)
+const newOffice_Z2 = 7;  // Нижняя стена (по твоему условию Z=7)
+
+// 1. Основные стены комнаты
+createWall((newOffice_X1 + newOffice_X2) / 2, newOffice_Z1, 8, wallThickness); // Верхняя стена
+createWall(newOffice_X1, 3.5, wallThickness, 7); // Левая стена
+createWall(newOffice_X2, 3.5, wallThickness, 7); // Правая стена
+
+// Нижняя стена с дверью ровно 2 метра по центру (от X=51 до X=53)
+createWall(49.5, newOffice_Z2, 3, wallThickness); // Стена слева от двери
+createWall(54.5, newOffice_Z2, 3, wallThickness); // Стена справа от двери
+createSlidingDoor(52, newOffice_Z2, 2, 3, 0.2);   // Входная дверь (2 метра)
+
+// 2. КАМОРКА (Слева, стены идут от X=50, Z=4)
+// Горизонтальная стена каморки: от X=50 до X=54 (длина 4), центр X=52, Z=4
+createWall(52, 4, 4, wallThickness); 
+// Вертикальная стена каморки: от Z=4 до Z=7 (длина 3), центр X=50, Z=5.5
+createWall(50, 5.5, wallThickness, 3); 
+// Внутри каморки (декор)
+createCooler(49, 1); 
+
+// 3. СТОЛЫ (Вплотную к стене каморки, начало X=50, Z=4)
+// Первый стол: ширина 1 (до 51), длина 2 (до 6). Центр: X=50.5, Z=5.
+createTable(50.5, 5, Math.PI / 2);
+createLaptop(50.5, 5, Math.PI / 2);
+createChair(49.5, 5, -Math.PI / 2); // Стул (кружок) слева от стола
+
+// Второй стол (вплотную к первому): начало X=51, Z=4. Центр: X=51.5, Z=5.
+createTable(51.5, 5, Math.PI / 2);
+createLaptop(51.5, 5, Math.PI / 2);
+createChair(52.5, 5, Math.PI / 2); // Стул справа от второго стола
+
+// 4. ДЕКОР И СВЕТ
+createPlant(55, 6); // Цветок в правом нижнем углу
+createLamp(52, 2);  // Лампа над входом
+createLamp(51, 5);  // Лампа над столами
+createLamp(49, 2);  // Лампа в каморке
+
 // --- КОРИДОР (LED Панели) ---
 // Прямой участок (вдоль офисов и переговорки)
 createCeilingPanel(8, 9.5); 
