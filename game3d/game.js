@@ -460,25 +460,23 @@ function createCoffeeMachine(x, z, rotY = 0) {
     walls.push({ x, z, width: 0.6, depth: 0.5 });
 }
 
-// Холодильник с лампочкой на потолке
 function createFridge(x, z, rotY = 0) {
     const group = new THREE.Group();
     
-    // Корпус
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), new THREE.MeshStandardMaterial({ color: 0x555555 }));
+    // Корпус (сделаем его глухим, чтобы свет не пробивался наружу)
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), new THREE.MeshStandardMaterial({ color: 0x333333 }));
     body.position.y = 1; body.castShadow = true; body.receiveShadow = true; group.add(body);
     
-    // Внутренняя стенка
+    // Внутренняя задняя стенка (белая, чтобы отражать свет)
     const innerBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.05), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
     innerBack.position.set(0, 1, -0.35); group.add(innerBack);
 
-    // Стекло (полупрозрачное)
-    const glassMat = new THREE.MeshStandardMaterial({ 
-        color: 0xaaccff, 
-        metalness: 0.1, 
-        roughness: 0.1, 
+    // СТЕКЛО (MeshBasicMaterial - не зависит от света, всегда прозрачное)
+    const glassMat = new THREE.MeshBasicMaterial({ 
+        color: 0xffffff, // Белый цвет, чтобы не искажать
         transparent: true, 
-        opacity: 0.25 
+        opacity: 0.1,    // Почти невидимое (10% плотности)
+        side: THREE.DoubleSide
     });
     const glass = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.8, 0.02), glassMat);
     glass.position.set(0, 1, 0.41); group.add(glass);
@@ -490,34 +488,33 @@ function createFridge(x, z, rotY = 0) {
         shelf.position.set(0, 0.4 + i*0.5, 0); group.add(shelf);
     }
     
-    // ЕДА
-    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xff69b4 }));
+    // ЕДА (сделаем её яркой, чтобы она выделялась)
+    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xff1493, emissive: 0x440022 }));
     cake.position.set(0.2, 0.5, 0); group.add(cake);
     
-    const bunMat = new THREE.MeshStandardMaterial({ color: 0xffd700 });
+    const bunMat = new THREE.MeshStandardMaterial({ color: 0xffa500, emissive: 0x442200 });
     const bun1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun1.position.set(-0.2, 1.0, 0.1); group.add(bun1);
     const bun2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun2.position.set(-0.1, 1.0, -0.1); group.add(bun2);
     
-    const can1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x00bfff })); 
+    const can1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x003333 })); 
     can1.position.set(0.2, 1.5, 0.1); group.add(can1);
     
-    const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0xff4500 })); 
+    const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0xff4500, emissive: 0x331100 })); 
     can2.position.set(0.2, 1.5, -0.1); group.add(can2);
     
     // Ручка
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
     handle.position.set(0.4, 1, 0.45); group.add(handle);
 
-    // --- ЛАМПОЧКА НА ПОТОЛКЕ ХОЛОДИЛЬНИКА ---
-    // 1. Визуальная лампочка (маленький светящийся цилиндр)
-    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2 });
+    // ЛАМПОЧКА (Опускаем её чуть ниже потолка и делаем направленной вниз)
+    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff });
     const bulb = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 8), bulbMat);
-    bulb.position.set(0, 1.9, 0); 
+    bulb.position.set(0, 1.8, 0); 
     group.add(bulb);
 
-    // 2. Сам источник света, который светит вниз на полки (без теней, чтобы не тормозило)
-    const fridgeLight = new THREE.PointLight(0xffffee, 2, 2);
-    fridgeLight.position.set(0, 1.8, 0);
+    // Свет (Intensity 1.5, Distance 1.5 - светит только внутри, не пробивает корпус)
+    const fridgeLight = new THREE.PointLight(0xffffff, 1.5, 1.5);
+    fridgeLight.position.set(0, 1.7, 0);
     group.add(fridgeLight);
     
     // Коллизия
