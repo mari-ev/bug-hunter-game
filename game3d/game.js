@@ -441,8 +441,8 @@ function createKitchenCounter(x, z, width, depth, rotY = 0) {
     else walls.push({ x, z, width: depth, depth: width });
 }
 
-// Кофемашина
-function createCoffeeMachine(x, z) {
+// Кофемашина (с поддержкой поворота)
+function createCoffeeMachine(x, z, rotY = 0) {
     const group = new THREE.Group();
     const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.5), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 }));
     body.position.y = 1.4; body.castShadow = true; group.add(body);
@@ -452,11 +452,14 @@ function createCoffeeMachine(x, z) {
     btn.position.set(0.1, 1.6, 0.28); group.add(btn);
     const tray = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.3), new THREE.MeshStandardMaterial({ color: 0x888888 }));
     tray.position.set(0, 1.05, 0.2); group.add(tray);
-    group.position.set(x, 0, z); scene.add(group);
+    
+    group.position.set(x, 0, z); 
+    group.rotation.y = rotY; // <-- ДОБАВЛЕНО
+    scene.add(group);
     walls.push({ x, z, width: 0.6, depth: 0.5 });
 }
 
-// Холодильник со стеклом, подсветкой и едой
+// Холодильник (с поддержкой поворота)
 function createFridge(x, z, rotY = 0) {
     const group = new THREE.Group();
     const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.3 }));
@@ -473,7 +476,6 @@ function createFridge(x, z, rotY = 0) {
         const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.02, 0.6), shelfMat);
         shelf.position.set(0, 0.4 + i*0.5, 0); group.add(shelf);
     }
-    // Еда
     const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xffb6c1 }));
     cake.position.set(0.2, 0.5, 0); group.add(cake);
     const bunMat = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
@@ -485,7 +487,9 @@ function createFridge(x, z, rotY = 0) {
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0x333333 }));
     handle.position.set(0.4, 1, 0.43); group.add(handle);
     
-    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+    group.position.set(x, 0, z); 
+    group.rotation.y = rotY; // <-- ДОБАВЛЕНО
+    scene.add(group);
     if (rotY === 0) walls.push({ x, z, width: 1, depth: 0.8 });
     else walls.push({ x, z, width: 0.8, depth: 1 });
 }
@@ -755,7 +759,7 @@ createSlidingDoor(coffee_X1, 24, 2, 3, 0.2, Math.PI / 2); // Дверь
 
 // 2. КУХОННАЯ ЗОНА (Вдоль правой стены)
 createKitchenCounter(64.5, 23, 4, 1, Math.PI / 2);
-createCoffeeMachine(64.5, 21.5); 
+createCoffeeMachine(64.5, 21.5, Math.PI / 2);
 createFridge(64.5, 25.5, Math.PI / 2);
 
 // 3. ЗОНА ОТДЫХА (Круглый стол по центру)
