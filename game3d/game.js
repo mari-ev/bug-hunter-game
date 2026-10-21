@@ -503,8 +503,7 @@ createBox(52, 2.5, 0.8, 0.8, 0.8);
 createCooler(64.4, 6.4); 
 createPlant(64, 2);      
 createSnackMachine(60.2, 6.5, Math.PI); 
-
-createLamp(58, 2);       
+      
 createLamp(51, 5);       
 createLamp(61, 2);
 
