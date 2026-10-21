@@ -759,8 +759,10 @@ createSlidingDoor(coffee_X1, 24, 2, 3, 0.2, Math.PI / 2); // Дверь
 
 // 2. КУХОННАЯ ЗОНА (Вдоль правой стены)
 createKitchenCounter(64.5, 23, 4, 1, Math.PI / 2);
-createCoffeeMachine(64.5, 21.5, Math.PI / 2);
-createFridge(64.5, 25.5, Math.PI / 2);
+
+// Кофемашина и холодильник: разворачиваем на -Math.PI / 2, чтобы они смотрели внутрь комнаты (налево)
+createCoffeeMachine(64.5, 21.5, -Math.PI / 2); 
+createFridge(64.5, 25.5, -Math.PI / 2);
 
 // 3. ЗОНА ОТДЫХА (Круглый стол по центру)
 createRoundTable(60.5, 22.5);
