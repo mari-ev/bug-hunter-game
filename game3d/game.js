@@ -732,26 +732,10 @@ for (let i = 0; i < 3; i++) {
 // 3. ТРАНСФОРМАТОР (Большой ящик в углу)
 createBox(54.5, 23.2, 1.2, 1.5, 1); // Используем нашу функцию коробки
 // Сверху на него поставим еще одну коробку для вида
-createBox(54.5, 23.2, 0.8, 0.8, 0.8); 
-// (Чтобы они стояли друг на друге, в функции createBox нужно передать высоту Y. 
-// Если они наложились, просто оставь один большой ящик, но так тоже норм)
 
-// 4. КАБЕЛИ (Имитация проводов на полу и стенах)
-const wireMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-// Провод на полу
-const cable1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8), wireMat);
-cable1.position.set(55, 0.05, 23); 
-cable1.rotation.z = Math.PI / 2; 
-scene.add(cable1);
-// Провод, идущий вверх к щитку
-const cable2 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.8, 8), wireMat);
-cable2.position.set(55.5, 1.5, 22.5); 
-scene.add(cable2);
-
-// 5. ОСВЕЩЕНИЕ И ДЕКОР
+// 4. ОСВЕЩЕНИЕ И ДЕКОР
 // В щитовой не нужен яркий уютный свет, сделаем холодную лампу
-createLamp(54.5, 22.5); 
-createLamp(55.5, 23.5);
+createLamp(54.5, 22.5);
 
 // --- КОМНАТА 7: COFFEE POINT ---
 const coffee_X1 = 59;
