@@ -467,7 +467,7 @@ kamorkaDoor.isHorizontal = false; // Говорим функции, что он�
 // Функция по умолчанию сдвигает по Z в плюс. Чтобы она ехала вверх (в минус), 
 // мы вручную меняем её начальную точку и направление сдвига при инициализации.
 kamorkaDoor.startZ = 3; 
-kamorkaDoor.openDir = -1; // <--- Вот эта переменная заставит её ехать вверх (к Z=0)
+kamorkaDoor.openDir = 1; // <--- Вот эта переменная заставит её ехать вверх (к Z=0)
 
 // Нижняя стена каморки (сплошная, от X=50 до X=54)
 createWall(52, 4, 4, wallThickness); 
@@ -506,8 +506,7 @@ createSnackMachine(60.2, 6.5, Math.PI);
 
 createLamp(58, 2);       
 createLamp(51, 5);       
-createLamp(61, 2);       
-createLamp(51.5, 1.5);
+createLamp(61, 2);
 
 // АВТОМАТ СО СНЕКАМИ (Справа от входной двери)
 createSnackMachine(60.2, 6.5, Math.PI); 
