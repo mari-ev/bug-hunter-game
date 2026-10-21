@@ -403,6 +403,106 @@ function createTrashBin(x, z) {
     walls.push({ x, z, width: 0.5, depth: 0.5 });
 }
 
+// --- ФУНКЦИИ ДЛЯ COFFEE POINT ---
+
+// Обычный стул для кафе (без колесиков)
+function createCafeChair(x, z, rotY = 0) {
+    const group = new THREE.Group();
+    const chairMat = new THREE.MeshStandardMaterial({ color: 0x4a3a2a });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.05, 0.45), chairMat);
+    seat.position.y = 0.45; seat.castShadow = true; seat.receiveShadow = true; group.add(seat);
+    const back1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.4, 0.05), chairMat);
+    back1.position.set(0, 0.7, -0.2); back1.castShadow = true; group.add(back1);
+    const back2 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.05), chairMat);
+    back2.position.set(0, 0.5, -0.2); back2.castShadow = true; group.add(back2);
+    const legPositions = [[-0.18, 0, -0.18], [0.18, 0, -0.18], [-0.18, 0, 0.18], [0.18, 0, 0.18]];
+    legPositions.forEach(([lx, ly, lz]) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.45, 8), metalMat);
+        leg.position.set(lx, 0.225, lz); leg.castShadow = true; group.add(leg);
+    });
+    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+}
+
+// Кухонная тумба (низкая)
+function createKitchenCounter(x, z, width, depth, rotY = 0) {
+    const group = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.BoxGeometry(width, 0.1, depth), new THREE.MeshStandardMaterial({ color: 0xdddddd }));
+    top.position.y = 0.9; top.castShadow = true; top.receiveShadow = true; group.add(top);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(width - 0.05, 0.85, depth - 0.05), new THREE.MeshStandardMaterial({ color: 0x2a2a2a }));
+    base.position.y = 0.45; base.castShadow = true; group.add(base);
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8 });
+    for (let i = 1; i < 4; i++) {
+        const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.2, 0.05), handleMat);
+        handle.position.set(-width/2 + (width/4)*i, 0.5, depth/2); group.add(handle);
+    }
+    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+    if (rotY === 0) walls.push({ x, z, width: width, depth: depth });
+    else walls.push({ x, z, width: depth, depth: width });
+}
+
+// Кофемашина
+function createCoffeeMachine(x, z) {
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.5), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 }));
+    body.position.y = 1.4; body.castShadow = true; group.add(body);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.05), new THREE.MeshStandardMaterial({ color: 0x555555 }));
+    panel.position.set(0, 1.6, 0.26); group.add(panel);
+    const btn = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.02), new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 1 }));
+    btn.position.set(0.1, 1.6, 0.28); group.add(btn);
+    const tray = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.3), new THREE.MeshStandardMaterial({ color: 0x888888 }));
+    tray.position.set(0, 1.05, 0.2); group.add(tray);
+    group.position.set(x, 0, z); scene.add(group);
+    walls.push({ x, z, width: 0.6, depth: 0.5 });
+}
+
+// Холодильник со стеклом, подсветкой и едой
+function createFridge(x, z, rotY = 0) {
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.3 }));
+    body.position.y = 1; body.castShadow = true; body.receiveShadow = true; group.add(body);
+    const innerBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.05), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
+    innerBack.position.set(0, 1, -0.35); group.add(innerBack);
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.8, 0.02), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, roughness: 0.1 }));
+    glass.position.set(0, 1, 0.41); group.add(glass);
+    const fridgeLight = new THREE.PointLight(0xffffee, 1.5, 2); 
+    fridgeLight.position.set(0, 1.5, 0.2); group.add(fridgeLight);
+    
+    const shelfMat = new THREE.MeshStandardMaterial({ color: 0xdddddd });
+    for(let i=0; i<3; i++) {
+        const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.02, 0.6), shelfMat);
+        shelf.position.set(0, 0.4 + i*0.5, 0); group.add(shelf);
+    }
+    // Еда
+    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xffb6c1 }));
+    cake.position.set(0.2, 0.5, 0); group.add(cake);
+    const bunMat = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
+    const bun1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun1.position.set(-0.2, 1.0, 0.1); group.add(bun1);
+    const bun2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun2.position.set(-0.1, 1.0, -0.1); group.add(bun2);
+    const can1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x4169e1 })); can1.position.set(0.2, 1.5, 0.1); group.add(can1);
+    const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0xff4500 })); can2.position.set(0.2, 1.5, -0.1); group.add(can2);
+    
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+    handle.position.set(0.4, 1, 0.43); group.add(handle);
+    
+    group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+    if (rotY === 0) walls.push({ x, z, width: 1, depth: 0.8 });
+    else walls.push({ x, z, width: 0.8, depth: 1 });
+}
+
+// Круглый столик
+function createRoundTable(x, z) {
+    const group = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.05, 16), woodMaterial);
+    top.position.y = 0.7; top.castShadow = true; group.add(top);
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), metalMaterial);
+    leg.position.y = 0.35; leg.castShadow = true; group.add(leg);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 16), metalMaterial);
+    base.position.y = 0.02; group.add(base);
+    group.position.set(x, 0, z); scene.add(group);
+    walls.push({ x, z, width: 1, depth: 1 });
+}
+
 // Лестница (пока просто декор)
 function createStairs(x, z) {
     const group = new THREE.Group();
@@ -652,6 +752,45 @@ scene.add(cable2);
 // В щитовой не нужен яркий уютный свет, сделаем холодную лампу
 createLamp(54.5, 22.5); 
 createLamp(55.5, 23.5);
+
+// --- КОМНАТА 7: COFFEE POINT ---
+const coffee_X1 = 59;
+const coffee_X2 = 65;
+const coffee_Z1 = 21;
+const coffee_Z2 = 27;
+
+// 1. Стены комнаты
+createWall((coffee_X1 + coffee_X2) / 2, coffee_Z1, 6, wallThickness); // Верхняя (Z=21)
+createWall((coffee_X1 + coffee_X2) / 2, coffee_Z2, 6, wallThickness); // Нижняя (Z=27)
+createWall(coffee_X2, 24, wallThickness, 6); // Правая (X=65)
+
+// Левая стена (X=59) с дверью от Z=23 до Z=25
+createWall(coffee_X1, 22, wallThickness, 2); // Стена от Z=21 до Z=23
+createWall(coffee_X1, 26, wallThickness, 2); // Стена от Z=25 до Z=27
+createSlidingDoor(coffee_X1, 24, 2, 3, 0.2, Math.PI / 2); // Дверь
+
+// 2. КУХОННАЯ ЗОНА (Вдоль правой стены)
+createKitchenCounter(64.5, 23, 4, 1, Math.PI / 2);
+createCoffeeMachine(64.5, 21.5); 
+createFridge(64.5, 25.5, Math.PI / 2);
+
+// 3. ЗОНА ОТДЫХА (Круглый стол по центру)
+createRoundTable(60.5, 22.5);
+createCafeChair(60.5, 21.5, 0);           
+createCafeChair(59.5, 22.5, Math.PI / 2); 
+createCafeChair(61.5, 22.5, -Math.PI / 2);
+
+// 4. ДЕКОР
+createPlant(60, 26); 
+createTrashBin(61, 26); 
+createCooler(60, 21.5); 
+
+// 5. ОСВЕЩЕНИЕ
+// Подвесная лампа (на проводе) ровно по центру стола
+createLoftLamp(60.5, 22.5); 
+// Офисные лампы вдоль тумбы
+createLamp(64, 22); 
+createLamp(64, 24);
 
 // --- КОРИДОР (LED Панели) ---
 // 1. Прямой участок (вдоль офисов и переговорки). Ось Z=8.5.
