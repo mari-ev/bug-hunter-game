@@ -459,37 +459,61 @@ function createCoffeeMachine(x, z, rotY = 0) {
     walls.push({ x, z, width: 0.6, depth: 0.5 });
 }
 
-// Холодильник (с поддержкой поворота)
+// Холодильник со стеклянной дверью, подсветкой и едой
 function createFridge(x, z, rotY = 0) {
     const group = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.3 }));
+    
+    // Корпус (металлик, темно-серый)
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.6, roughness: 0.4 }));
     body.position.y = 1; body.castShadow = true; body.receiveShadow = true; group.add(body);
-    const innerBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.05), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
+    
+    // Внутренняя стенка (светлая, чтобы еда выделялась)
+    const innerBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.05), new THREE.MeshStandardMaterial({ color: 0xffffff }));
     innerBack.position.set(0, 1, -0.35); group.add(innerBack);
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.8, 0.02), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, roughness: 0.1 }));
+
+    // СТЕКЛО (Улучшенный материал)
+    const glassMat = new THREE.MeshPhysicalMaterial({ 
+        color: 0xaaccff,       // Легкий голубой оттенок
+        metalness: 0.1,        // Немного металла для блеска
+        roughness: 0.05,       // Очень гладкое (нет шероховатостей)
+        transmission: 0.9,     // Пропускает 90% света (эффект прозрачности)
+        transparent: true, 
+        opacity: 0.6,          // Базовая прозрачность
+        side: THREE.DoubleSide // Видно с обеих сторон
+    });
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.8, 0.02), glassMat);
     glass.position.set(0, 1, 0.41); group.add(glass);
-    const fridgeLight = new THREE.PointLight(0xffffee, 1.5, 2); 
+
+    // Подсветка изнутри (усиленная, чтобы пробить стекло)
+    const fridgeLight = new THREE.PointLight(0xffffff, 2.5, 3); 
     fridgeLight.position.set(0, 1.5, 0.2); group.add(fridgeLight);
     
-    const shelfMat = new THREE.MeshStandardMaterial({ color: 0xdddddd });
+    // Полки
+    const shelfMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, transparent: true, opacity: 0.5 }); // Полупрозрачные полки
     for(let i=0; i<3; i++) {
         const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.02, 0.6), shelfMat);
         shelf.position.set(0, 0.4 + i*0.5, 0); group.add(shelf);
     }
-    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xffb6c1 }));
+    
+    // ЕДА (яркие цвета, чтобы было видно)
+    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xff69b4 })); // Ярко-розовый торт
     cake.position.set(0.2, 0.5, 0); group.add(cake);
-    const bunMat = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
+    
+    const bunMat = new THREE.MeshStandardMaterial({ color: 0xffd700 }); // Золотистые булочки
     const bun1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun1.position.set(-0.2, 1.0, 0.1); group.add(bun1);
     const bun2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun2.position.set(-0.1, 1.0, -0.1); group.add(bun2);
-    const can1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x4169e1 })); can1.position.set(0.2, 1.5, 0.1); group.add(can1);
-    const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0xff4500 })); can2.position.set(0.2, 1.5, -0.1); group.add(can2);
     
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0x333333 }));
-    handle.position.set(0.4, 1, 0.43); group.add(handle);
+    const can1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x00bfff })); can1.position.set(0.2, 1.5, 0.1); group.add(can1); // Голубая банка
+    const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0xff4500 })); can2.position.set(0.2, 1.5, -0.1); group.add(can2); // Оранжевая банка
+    
+    // Ручка
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
+    handle.position.set(0.4, 1, 0.45); group.add(handle);
     
     group.position.set(x, 0, z); 
-    group.rotation.y = rotY; // <-- ДОБАВЛЕНО
+    group.rotation.y = rotY; 
     scene.add(group);
+    
     if (rotY === 0) walls.push({ x, z, width: 1, depth: 0.8 });
     else walls.push({ x, z, width: 0.8, depth: 1 });
 }
