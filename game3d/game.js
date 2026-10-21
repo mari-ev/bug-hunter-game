@@ -463,23 +463,26 @@ function createCoffeeMachine(x, z, rotY = 0) {
 function createFridge(x, z, rotY = 0) {
     const group = new THREE.Group();
     
-    // Корпус (сделаем его глухим, чтобы свет не пробивался наружу)
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+    // Корпус (задняя, верхняя, нижняя и боковые стенки - чтобы не было пустоты)
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), bodyMat);
     body.position.y = 1; body.castShadow = true; body.receiveShadow = true; group.add(body);
     
-    // Внутренняя задняя стенка (белая, чтобы отражать свет)
+    // Внутренняя задняя стенка
     const innerBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.05), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
     innerBack.position.set(0, 1, -0.35); group.add(innerBack);
 
-    // СТЕКЛО (MeshBasicMaterial - не зависит от света, всегда прозрачное)
+    // СТЕКЛО (Плоская плоскость, вынесенная чуть вперед)
     const glassMat = new THREE.MeshBasicMaterial({ 
-        color: 0xffffff, // Белый цвет, чтобы не искажать
+        color: 0xffffff, 
         transparent: true, 
-        opacity: 0.1,    // Почти невидимое (10% плотности)
+        opacity: 0.1,    
         side: THREE.DoubleSide
     });
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.8, 0.02), glassMat);
-    glass.position.set(0, 1, 0.41); group.add(glass);
+    // Используем PlaneGeometry вместо BoxGeometry (нет толщины = нет глюков)
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 1.8), glassMat);
+    glass.position.set(0, 1, 0.41); // Чуть впереди корпуса (корпус заканчивается на 0.4)
+    group.add(glass);
 
     // Полки
     const shelfMat = new THREE.MeshStandardMaterial({ color: 0xdddddd });
@@ -488,7 +491,7 @@ function createFridge(x, z, rotY = 0) {
         shelf.position.set(0, 0.4 + i*0.5, 0); group.add(shelf);
     }
     
-    // ЕДА (сделаем её яркой, чтобы она выделялась)
+    // ЕДА
     const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xff1493, emissive: 0x440022 }));
     cake.position.set(0.2, 0.5, 0); group.add(cake);
     
@@ -506,14 +509,14 @@ function createFridge(x, z, rotY = 0) {
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
     handle.position.set(0.4, 1, 0.45); group.add(handle);
 
-    // ЛАМПОЧКА (Опускаем её чуть ниже потолка и делаем направленной вниз)
+    // ЛАМПОЧКА
     const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff });
     const bulb = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 8), bulbMat);
     bulb.position.set(0, 1.8, 0); 
     group.add(bulb);
 
-    // Свет (Intensity 1.5, Distance 1.5 - светит только внутри, не пробивает корпус)
-    const fridgeLight = new THREE.PointLight(0xffffff, 1.5, 1.5);
+    // Свет (Убрали радиус, сделали точечным, чтобы не пробивал стекло)
+    const fridgeLight = new THREE.PointLight(0xffffff, 1.5, 1.0);
     fridgeLight.position.set(0, 1.7, 0);
     group.add(fridgeLight);
     
