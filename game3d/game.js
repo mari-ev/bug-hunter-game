@@ -474,7 +474,7 @@ createWall(52, 4, 4, wallThickness);
 
 // 3. СТОЛ В ЛЕВОМ НИЖНЕМ УГЛУ
 createTable(50.5, 5, Math.PI / 2); 
-createLaptop(50.5, 5, Math.PI / 2);
+createLaptop(50.5, 5, -Math.PI / 2);
 createChair(51.5, 5, -Math.PI / 2); 
 
 // 4. СТОЛЫ В ПРАВОЙ ЧАСТИ
@@ -483,7 +483,7 @@ createLaptop(60.5, 1, Math.PI / 2);
 createChair(59.5, 1, Math.PI / 2);
 
 createTable(61.5, 1, Math.PI / 2);
-createLaptop(61.5, 1, Math.PI / 2);
+createLaptop(61.5, 1, -Math.PI / 2);
 createChair(62.5, 1, -Math.PI / 2);
 
 createTable(60.5, 3, Math.PI / 2);
@@ -491,7 +491,7 @@ createLaptop(60.5, 3, Math.PI / 2);
 createChair(59.5, 3, Math.PI / 2);
 
 createTable(61.5, 3, Math.PI / 2);
-createLaptop(61.5, 3, Math.PI / 2);
+createLaptop(61.5, 3, -Math.PI / 2);
 createChair(62.5, 3, -Math.PI / 2);
 
 // 5. ДЕКОР И СВЕТ
@@ -537,7 +537,6 @@ createCeilingPanel(48, 16.5);
 // Поворот налево (вдоль правой стены холла)
 createCeilingPanel(51.5, 12);
 createCeilingPanel(51.5, 8);
-createCeilingPanel(51.5, 4);
 
 /* =====================================================================
    8. ПЕРСОНАЖ
