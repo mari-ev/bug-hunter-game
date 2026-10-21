@@ -56,16 +56,17 @@ const standMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, metalnes
 const sofaMaterial = new THREE.MeshStandardMaterial({ color: 0x8b0000 }); 
 const laptopScreenMaterial = new THREE.MeshStandardMaterial({ map: screenTexture, emissive: 0xff0000, emissiveIntensity: 2.5, side: THREE.DoubleSide });
 
-// Стекло для холодильника (или окон)
-const fridgeGlassMaterial = new THREE.MeshPhysicalMaterial({ 
-    color: 0xaaccff,       // Легкий голубой оттенок
-    metalness: 0.1,        
-    roughness: 0.05,       
-    transmission: 0.9,     // Пропускает свет
+// Легкое стекло для холодильника (без тяжелого преломления)
+const fridgeGlassMaterial = new THREE.MeshStandardMaterial({ 
+    color: 0x88bbee,       // Голубоватый оттенок
+    metalness: 0.2,        
+    roughness: 0.1,        
     transparent: true, 
-    opacity: 0.6,          
+    opacity: 0.3,          // Довольно прозрачное
+    emissive: 0x112233,    // Легкое свечение, чтобы не было черным
     side: THREE.DoubleSide 
 });
+    
 
 // Декор
 const potMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
@@ -487,8 +488,8 @@ function createFridge(x, z, rotY = 0) {
     glass.position.set(0, 1, 0.41); group.add(glass);
 
     // Подсветка изнутри
-    const fridgeLight = new THREE.PointLight(0xffffff, 2.5, 3); 
-    fridgeLight.position.set(0, 1.5, 0.2); group.add(fridgeLight);
+    // const fridgeLight = new THREE.PointLight(0xffffff, 2.5, 3); 
+    // fridgeLight.position.set(0, 1.5, 0.2); group.add(fridgeLight);
     
     // Полки
     const shelfMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, transparent: true, opacity: 0.5 });
@@ -497,27 +498,20 @@ function createFridge(x, z, rotY = 0) {
         shelf.position.set(0, 0.4 + i*0.5, 0); group.add(shelf);
     }
     
-    // Еда
-    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xff69b4 }));
+    // Еда (добавили emissive, чтобы она светилась в темноте)
+    const cakeMat = new THREE.MeshStandardMaterial({ color: 0xff69b4, emissive: 0x441122, emissiveIntensity: 1 });
+    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), cakeMat);
     cake.position.set(0.2, 0.5, 0); group.add(cake);
     
-    const bunMat = new THREE.MeshStandardMaterial({ color: 0xffd700 });
+    const bunMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x443300, emissiveIntensity: 1 });
     const bun1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun1.position.set(-0.2, 1.0, 0.1); group.add(bun1);
     const bun2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun2.position.set(-0.1, 1.0, -0.1); group.add(bun2);
     
-    const can1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x00bfff })); can1.position.set(0.2, 1.5, 0.1); group.add(can1);
-    const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0xff4500 })); can2.position.set(0.2, 1.5, -0.1); group.add(can2);
+    const can1Mat = new THREE.MeshStandardMaterial({ color: 0x00bfff, emissive: 0x002244, emissiveIntensity: 1 });
+    const can1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), can1Mat); can1.position.set(0.2, 1.5, 0.1); group.add(can1);
     
-    // Ручка
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
-    handle.position.set(0.4, 1, 0.45); group.add(handle);
-    
-    group.position.set(x, 0, z); 
-    group.rotation.y = rotY; 
-    scene.add(group);
-    
-    if (rotY === 0) walls.push({ x, z, width: 1, depth: 0.8 });
-    else walls.push({ x, z, width: 0.8, depth: 1 });
+    const can2Mat = new THREE.MeshStandardMaterial({ color: 0xff4500, emissive: 0x441100, emissiveIntensity: 1 });
+    const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), can2Mat); can2.position.set(0.2, 1.5, -0.1); group.add(can2);
 }
 
 // Круглый столик
