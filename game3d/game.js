@@ -594,6 +594,65 @@ createTVOnStand(62.5, 13, -Math.PI / 2);
 
 createLamp(57.5, 14); // Лампа над большим столом
 
+// --- КОМНАТА 6: ЩИТОВАЯ (Техническая комната) ---
+const shchit_X1 = 53;
+const shchit_X2 = 56;
+const shchit_Z1 = 21;
+const shchit_Z2 = 24;
+
+// 1. Стены комнаты
+createWall((shchit_X1 + shchit_X2) / 2, shchit_Z1, 3, wallThickness); // Верхняя (Z=21)
+createWall((shchit_X1 + shchit_X2) / 2, shchit_Z2, 3, wallThickness); // Нижняя (Z=24)
+createWall(shchit_X2, 22.5, wallThickness, 3); // Правая (X=56)
+
+// Левая стена (X=53) с дверью 2 метра (от Z=22 до Z=24)
+createWall(shchit_X1, 21.5, wallThickness, 1); // Верхний кусок стены
+createSlidingDoor(shchit_X1, 23, 2, 3, 0.2, Math.PI / 2); // Дверь (внизу)
+
+// 2. ЭЛЕКТРОЩИТОК НА СТЕНЕ (Создаем визуально)
+// Корпус щитка (висит на правой стене X=56)
+const panelBox = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.5, 2), new THREE.MeshStandardMaterial({ color: 0x444444 }));
+panelBox.position.set(55.8, 1.8, 22.5); 
+panelBox.castShadow = true; 
+scene.add(panelBox); 
+walls.push({ x: 55.8, z: 22.5, width: 0.2, depth: 2 });
+
+// Мигающие индикаторы на щитке (красные и зеленые)
+const indMatRed = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2 });
+const indMatGreen = new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 2 });
+for (let i = 0; i < 3; i++) {
+    const indR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.1), indMatRed);
+    indR.position.set(55.7, 2.2, 22.2 + (i * 0.3)); 
+    scene.add(indR);
+    const indG = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.1), indMatGreen);
+    indG.position.set(55.7, 2.0, 22.2 + (i * 0.3)); 
+    scene.add(indG);
+}
+
+// 3. ТРАНСФОРМАТОР (Большой ящик в углу)
+createBox(54.5, 23.2, 1.2, 1.5, 1); // Используем нашу функцию коробки
+// Сверху на него поставим еще одну коробку для вида
+createBox(54.5, 23.2, 0.8, 0.8, 0.8); 
+// (Чтобы они стояли друг на друге, в функции createBox нужно передать высоту Y. 
+// Если они наложились, просто оставь один большой ящик, но так тоже норм)
+
+// 4. КАБЕЛИ (Имитация проводов на полу и стенах)
+const wireMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+// Провод на полу
+const cable1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8), wireMat);
+cable1.position.set(55, 0.05, 23); 
+cable1.rotation.z = Math.PI / 2; 
+scene.add(cable1);
+// Провод, идущий вверх к щитку
+const cable2 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.8, 8), wireMat);
+cable2.position.set(55.5, 1.5, 22.5); 
+scene.add(cable2);
+
+// 5. ОСВЕЩЕНИЕ И ДЕКОР
+// В щитовой не нужен яркий уютный свет, сделаем холодную лампу
+createLamp(54.5, 22.5); 
+createLamp(55.5, 23.5);
+
 // --- КОРИДОР (LED Панели) ---
 // 1. Прямой участок (вдоль офисов и переговорки). Ось Z=8.5.
 createCeilingPanel(8, 8.5);  // Подняли на 8.5, чтобы было по центру коридора
