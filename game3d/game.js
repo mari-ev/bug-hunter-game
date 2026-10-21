@@ -595,31 +595,46 @@ createTVOnStand(62.5, 13, -Math.PI / 2);
 createLamp(57.5, 14); // Лампа над большим столом
 
 // --- КОРИДОР (LED Панели) ---
-// Прямой участок (вдоль офисов и переговорки)
-createCeilingPanel(8, 9.5); 
-createCeilingPanel(12, 9.5); 
-createCeilingPanel(16, 9.5); 
-createCeilingPanel(20, 9.5); 
-createCeilingPanel(24, 9.5); 
-createCeilingPanel(28, 9.5); 
+// 1. Прямой участок (вдоль офисов и переговорки). Ось Z=8.5.
+createCeilingPanel(8, 8.5);  // Подняли на 8.5, чтобы было по центру коридора
+createCeilingPanel(11, 8.5); // Шаг 3 метра
+createCeilingPanel(14, 8.5);
+createCeilingPanel(17, 8.5);
+createCeilingPanel(20, 8.5);
+createCeilingPanel(23, 8.5);
+createCeilingPanel(26, 8.5);
+createCeilingPanel(29, 8.5);
 
-// Поворот направо (вдоль нижней стены холла)
+// 2. Поворот направо (вдоль нижней стены холла). Ось Z=16.5.
+// (Здесь у тебя было 32, 36, 40... сделаем шаг 3)
 createCeilingPanel(32, 16.5);
-createCeilingPanel(36, 16.5);
-createCeilingPanel(40, 16.5);
+createCeilingPanel(35, 16.5);
+createCeilingPanel(38, 16.5);
+createCeilingPanel(41, 16.5);
 createCeilingPanel(44, 16.5);
-createCeilingPanel(48, 16.5);
+createCeilingPanel(47, 16.5);
 
-// Поворот налево (вдоль правой стены холла)
-createCeilingPanel(51.5, 12);
+// 3. Поворот налево (вдоль правой стены холла). Ось X=51.5.
+// Идем сверху вниз с шагом 3: 4 -> 8 -> 12 -> 16 -> 20
+createCeilingPanel(51.5, 4);
 createCeilingPanel(51.5, 8);
+createCeilingPanel(51.5, 12);
+createCeilingPanel(51.5, 16);
+createCeilingPanel(51.5, 20);
 
-// Новый участок коридора (между офисом с каморкой и Переговоркой №2)
-// Коридор идет от X=53 до X=65 по оси Z (центр Z=8.5)
+// 4. Новый участок СВЕРХУ от Переговорки №2 (Ось Z=8.5, шаг 3)
 createCeilingPanel(54, 8.5); 
 createCeilingPanel(57, 8.5); 
 createCeilingPanel(60, 8.5); 
-createCeilingPanel(63, 8.5);
+createCeilingPanel(63, 8.5); 
+
+// 5. Новый участок СНИЗУ от Переговорки №2 (Ось Z=19.5, шаг 3)
+// Добавляем панель в самый угол (X=51.5, Z=19.5) для равномерности
+createCeilingPanel(51.5, 19.5); 
+createCeilingPanel(54, 19.5);
+createCeilingPanel(57, 19.5);
+createCeilingPanel(60, 19.5);
+createCeilingPanel(63, 19.5);
 
 /* =====================================================================
    8. ПЕРСОНАЖ
