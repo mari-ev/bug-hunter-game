@@ -463,35 +463,35 @@ function createCoffeeMachine(x, z, rotY = 0) {
 function createFridge(x, z, rotY = 0) {
     const group = new THREE.Group();
     
-    // Корпус (задняя, верхняя, нижняя и боковые стенки - чтобы не было пустоты)
+    // Корпус (сделаем из 5 частей, чтобы передняя часть была открыта)
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.8), bodyMat);
-    body.position.y = 1; body.castShadow = true; body.receiveShadow = true; group.add(body);
     
-    // Внутренняя задняя стенка
-    const innerBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.05), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
-    innerBack.position.set(0, 1, -0.35); group.add(innerBack);
-
-    // СТЕКЛО (Плоская плоскость, вынесенная чуть вперед)
-    const glassMat = new THREE.MeshBasicMaterial({ 
-        color: 0xffffff, 
-        transparent: true, 
-        opacity: 0.1,    
-        side: THREE.DoubleSide
-    });
-    // Используем PlaneGeometry вместо BoxGeometry (нет толщины = нет глюков)
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 1.8), glassMat);
-    glass.position.set(0, 1, 0.41); // Чуть впереди корпуса (корпус заканчивается на 0.4)
-    group.add(glass);
+    // Задняя стенка
+    const back = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.05), bodyMat);
+    back.position.set(0, 1, -0.375); back.castShadow = true; group.add(back);
+    // Боковые стенки
+    const left = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2, 0.8), bodyMat);
+    left.position.set(-0.475, 1, 0); left.castShadow = true; group.add(left);
+    const right = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2, 0.8), bodyMat);
+    right.position.set(0.475, 1, 0); right.castShadow = true; group.add(right);
+    // Верх и низ
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 0.8), bodyMat);
+    top.position.set(0, 1.975, 0); top.castShadow = true; group.add(top);
+    const bottom = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 0.8), bodyMat);
+    bottom.position.set(0, 0.025, 0); bottom.castShadow = true; group.add(bottom);
+    
+    // Внутренняя стенка (белая)
+    const innerBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.02), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
+    innerBack.position.set(0, 1, -0.34); group.add(innerBack);
 
     // Полки
     const shelfMat = new THREE.MeshStandardMaterial({ color: 0xdddddd });
     for(let i=0; i<3; i++) {
-        const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.02, 0.6), shelfMat);
+        const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 0.7), shelfMat);
         shelf.position.set(0, 0.4 + i*0.5, 0); group.add(shelf);
     }
     
-    // ЕДА
+    // ЕДА (Яркая)
     const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xff1493, emissive: 0x440022 }));
     cake.position.set(0.2, 0.5, 0); group.add(cake);
     
@@ -505,22 +505,33 @@ function createFridge(x, z, rotY = 0) {
     const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0xff4500, emissive: 0x331100 })); 
     can2.position.set(0.2, 1.5, -0.1); group.add(can2);
     
-    // Ручка
+    // ДВЕРЦА (Тонкая рамка по контуру, как будто дверь открыта, но мы видим её контур)
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.05), frameMat);
+    frameTop.position.set(0, 1.95, 0.4); group.add(frameTop);
+    const frameBottom = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.05), frameMat);
+    frameBottom.position.set(0, 0.05, 0.4); group.add(frameBottom);
+    const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.9, 0.05), frameMat);
+    frameLeft.position.set(-0.45, 1, 0.4); group.add(frameLeft);
+    const frameRight = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.9, 0.05), frameMat);
+    frameRight.position.set(0.45, 1, 0.4); group.add(frameRight);
+
+    // Ручка на правой стороне
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
     handle.position.set(0.4, 1, 0.45); group.add(handle);
 
-    // ЛАМПОЧКА
+    // ЛАМПОЧКА НА ПОТОЛКЕ
     const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff });
     const bulb = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 8), bulbMat);
     bulb.position.set(0, 1.8, 0); 
     group.add(bulb);
 
-    // Свет (Убрали радиус, сделали точечным, чтобы не пробивал стекло)
-    const fridgeLight = new THREE.PointLight(0xffffff, 1.5, 1.0);
-    fridgeLight.position.set(0, 1.7, 0);
+    // Свет
+    const fridgeLight = new THREE.PointLight(0xffffff, 2, 2);
+    fridgeLight.position.set(0, 1.7, 0.2);
     group.add(fridgeLight);
     
-    // Коллизия
+    // Коллизия (ставим стенку-невидимку перед едой, чтобы игрок не залез внутрь)
     group.position.set(x, 0, z); 
     group.rotation.y = rotY; 
     scene.add(group);
