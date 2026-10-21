@@ -363,6 +363,46 @@ function createCoffeeTable(x, z) {
     group.position.set(x, 0, z); scene.add(group); walls.push({ x, z, width: 1, depth: 1 });
 }
 
+// Длинный стол под заказ (для переговорок/опенспейсов)
+function createLongTable(x, z, length, width) {
+    const group = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.BoxGeometry(length, 0.1, width), woodMaterial);
+    top.position.y = 1; 
+    top.castShadow = true; 
+    top.receiveShadow = true; 
+    group.add(top);
+    
+    const legPositions = [
+        [-length/2 + 0.2, 0, -width/2 + 0.2], 
+        [length/2 - 0.2, 0, -width/2 + 0.2], 
+        [-length/2 + 0.2, 0, width/2 - 0.2], 
+        [length/2 - 0.2, 0, width/2 - 0.2]
+    ];
+    legPositions.forEach(([lx, ly, lz]) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1, 0.15), darkMaterial);
+        leg.position.set(lx, 0.5, lz); 
+        leg.castShadow = true; 
+        group.add(leg);
+    });
+    
+    group.position.set(x, 0, z); 
+    scene.add(group); 
+    walls.push({ x, z, width: length, depth: width });
+}
+
+// Мусорное ведро
+function createTrashBin(x, z) {
+    const group = new THREE.Group();
+    const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.2, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+    bin.position.y = 0.3; bin.castShadow = true; bin.receiveShadow = true; group.add(bin);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.05, 12), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+    lid.position.y = 0.62; lid.castShadow = true; group.add(lid);
+    
+    group.position.set(x, 0, z); 
+    scene.add(group); 
+    walls.push({ x, z, width: 0.5, depth: 0.5 });
+}
+
 // Лестница (пока просто декор)
 function createStairs(x, z) {
     const group = new THREE.Group();
@@ -516,6 +556,47 @@ createLamp(55, 5);       // Лампа над столами у каморки
 createLamp(61, 2);       // Лампа над правым рядом
 createLamp(52, 2);       // Лампа в каморке
 
+// --- КОМНАТА 5: ПЕРЕГОВОРКА №2 (С большим столом) ---
+const office5_X1 = 53;
+const office5_X2 = 65;
+const office5_Z1 = 10;
+const office5_Z2 = 18;
+
+// 1. Основные стены комнаты
+createWall((office5_X1 + office5_X2) / 2, office5_Z1, 12, wallThickness); // Верхняя стена (Z=10)
+createWall((office5_X1 + office5_X2) / 2, office5_Z2, 12, wallThickness); // Нижняя стена (Z=18)
+createWall(office5_X2, 14, wallThickness, 8); // Правая стена (X=65)
+
+// Левая стена (X=53) с дверью от Z=14 до Z=16
+createWall(office5_X1, 12, wallThickness, 4); // Стена от Z=10 до Z=14
+createWall(office5_X1, 17, wallThickness, 2); // Стена от Z=16 до Z=18
+createSlidingDoor(office5_X1, 15, 2, 3, 0.2, Math.PI / 2); // Дверь
+
+// 2. БОЛЬШОЙ СТОЛ
+createLongTable(57.5, 14, 5, 2); 
+
+// 3. СТУЛЬЯ (По 3 штуки с каждой длинной стороны)
+// Верхняя сторона (смотрят вниз, на стол)
+createChair(56, 12.5, 0);   
+createChair(57.5, 12.5, 0); 
+createChair(59, 12.5, 0);   
+
+// Нижняя сторона (смотрят вверх, на стол)
+createChair(56, 15.5, Math.PI);   
+createChair(57.5, 15.5, Math.PI); 
+createChair(59, 15.5, Math.PI);   
+
+// 4. ДЕКОР, ТЕХНИКА И СВЕТ
+createCooler(53.5, 10.5); // Кулер в левом верхнем углу
+createTrashBin(64.5, 10.5); // Мусорное ведро в правом верхнем углу
+
+// ТЕЛЕВИЗОР (Вертикально, экраном к столу)
+createTVOnStand(62.5, 13, -Math.PI / 2);
+
+createLamp(57.5, 14); // Лампа над большим столом
+createLamp(54, 11);   // Лампа у входа
+createLamp(62.5, 13); // Лампа над телевизором
+
 // --- КОРИДОР (LED Панели) ---
 // Прямой участок (вдоль офисов и переговорки)
 createCeilingPanel(8, 9.5); 
@@ -535,6 +616,13 @@ createCeilingPanel(48, 16.5);
 // Поворот налево (вдоль правой стены холла)
 createCeilingPanel(51.5, 12);
 createCeilingPanel(51.5, 8);
+
+// Новый участок коридора (между офисом с каморкой и Переговоркой №2)
+// Коридор идет от X=53 до X=65 по оси Z (центр Z=8.5)
+createCeilingPanel(54, 8.5); 
+createCeilingPanel(57, 8.5); 
+createCeilingPanel(60, 8.5); 
+createCeilingPanel(63, 8.5);
 
 /* =====================================================================
    8. ПЕРСОНАЖ
