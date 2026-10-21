@@ -460,10 +460,11 @@ function createCoffeeMachine(x, z, rotY = 0) {
     walls.push({ x, z, width: 0.6, depth: 0.5 });
 }
 
+// Холодильник-витрина с улучшенной едой
 function createFridge(x, z, rotY = 0) {
     const group = new THREE.Group();
     
-    // Корпус (сделаем из 5 частей, чтобы передняя часть была открыта)
+    // --- 1. КОРПУС (Открытый с передней части) ---
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
     
     // Задняя стенка
@@ -480,7 +481,7 @@ function createFridge(x, z, rotY = 0) {
     const bottom = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 0.8), bodyMat);
     bottom.position.set(0, 0.025, 0); bottom.castShadow = true; group.add(bottom);
     
-    // Внутренняя стенка (белая)
+    // Внутренняя задняя стенка (белая, чтобы отражать свет)
     const innerBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.02), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
     innerBack.position.set(0, 1, -0.34); group.add(innerBack);
 
@@ -491,21 +492,103 @@ function createFridge(x, z, rotY = 0) {
         shelf.position.set(0, 0.4 + i*0.5, 0); group.add(shelf);
     }
     
-    // ЕДА (Яркая)
-    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xff1493, emissive: 0x440022 }));
-    cake.position.set(0.2, 0.5, 0); group.add(cake);
+    // --- 2. ЕДА ---
     
-    const bunMat = new THREE.MeshStandardMaterial({ color: 0xffa500, emissive: 0x442200 });
-    const bun1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun1.position.set(-0.2, 1.0, 0.1); group.add(bun1);
-    const bun2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bunMat); bun2.position.set(-0.1, 1.0, -0.1); group.add(bun2);
+    // ТОРТИК (Слои + вишенка)
+    const cakeBase = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.12, 16), new THREE.MeshStandardMaterial({ color: 0xffb6c1 }));
+    cakeBase.position.set(0.2, 0.46, 0); group.add(cakeBase);
+    const cakeCream = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.04, 16), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    cakeCream.position.set(0.2, 0.54, 0); group.add(cakeCream);
+    const cakeTop = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.06, 16), new THREE.MeshStandardMaterial({ color: 0xff69b4 }));
+    cakeTop.position.set(0.2, 0.59, 0); group.add(cakeTop);
+    const cherry = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), new THREE.MeshStandardMaterial({ color: 0xcc0000 }));
+    cherry.position.set(0.2, 0.64, 0); group.add(cherry);
+
+    // БУЛОЧКИ (Сплющенные + корочка)
+    const bunMat = new THREE.MeshStandardMaterial({ color: 0xffd700 }); 
+    const crustMat = new THREE.MeshStandardMaterial({ color: 0xcd853f }); 
+    const bun1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), bunMat); 
+    bun1.position.set(-0.2, 0.95, 0.1); bun1.scale.set(1, 0.7, 1); group.add(bun1); 
+    const crust1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), crustMat);
+    crust1.position.set(-0.2, 1.02, 0.1); crust1.scale.set(1, 0.3, 1); group.add(crust1); 
+    const bun2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), bunMat); 
+    bun2.position.set(-0.05, 0.95, -0.05); bun2.scale.set(1, 0.7, 1); group.add(bun2);
+    const crust2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), crustMat);
+    crust2.position.set(-0.05, 1.02, -0.05); crust2.scale.set(1, 0.3, 1); group.add(crust2);
+
+    // БАНКИ (С этикетками и крышками)
+    const can1Body = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 12), new THREE.MeshStandardMaterial({ color: 0x4682b4 })); 
+    can1Body.position.set(0.2, 1.45, 0.1); group.add(can1Body);
+    const can1Label = new THREE.Mesh(new THREE.CylinderGeometry(0.081, 0.081, 0.1, 12), new THREE.MeshStandardMaterial({ color: 0xffffff })); 
+    can1Label.position.set(0.2, 1.45, 0.1); group.add(can1Label);
+    const can1Lid = new THREE.Mesh(new THREE.CylinderGeometry(0.081, 0.081, 0.02, 12), new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8 })); 
+    can1Lid.position.set(0.2, 1.58, 0.1); group.add(can1Lid);
+
+    const can2Body = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 12), new THREE.MeshStandardMaterial({ color: 0xff4500 })); 
+    can2Body.position.set(0.2, 1.45, -0.1); group.add(can2Body);
+    const can2Label = new THREE.Mesh(new THREE.CylinderGeometry(0.081, 0.081, 0.1, 12), new THREE.MeshStandardMaterial({ color: 0xffd700 })); 
+    can2Label.position.set(0.2, 1.45, -0.1); group.add(can2Label);
+    const can2Lid = new THREE.Mesh(new THREE.CylinderGeometry(0.081, 0.081, 0.02, 12), new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8 })); 
+    can2Lid.position.set(0.2, 1.58, -0.1); group.add(can2Lid);
+
+    // ЙОГУРТ (Стаканчик)
+    const yogurt = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.15, 12), new THREE.MeshStandardMaterial({ color: 0xf5f5dc })); 
+    yogurt.position.set(-0.2, 0.48, -0.1); group.add(yogurt);
+    const yogurtLid = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.01, 12), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 })); 
+    yogurtLid.position.set(-0.2, 0.56, -0.1); group.add(yogurtLid);
+
+    // ПАКЕТЫ МОЛОКА (Тетрапаки)
+    const milkMat = new THREE.MeshStandardMaterial({ color: 0xffffff }); 
+    const milkLabelMat = new THREE.MeshStandardMaterial({ color: 0x1e90ff }); 
+
+    const milk1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.22, 0.12), milkMat);
+    milk1.position.set(-0.05, 0.51, 0.1); group.add(milk1);
+    const label1 = new THREE.Mesh(new THREE.BoxGeometry(0.125, 0.1, 0.125), milkLabelMat);
+    label1.position.set(-0.05, 0.51, 0.1); group.add(label1);
+    const roof1 = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.06, 4), milkMat);
+    roof1.position.set(-0.05, 0.65, 0.1); roof1.rotation.y = Math.PI / 4; group.add(roof1);
+
+    const milk2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.22, 0.12), milkMat);
+    milk2.position.set(-0.2, 0.51, -0.15); group.add(milk2);
+    const label2 = new THREE.Mesh(new THREE.BoxGeometry(0.125, 0.1, 0.125), new THREE.MeshStandardMaterial({ color: 0xdc143c }));
+    label2.position.set(-0.2, 0.51, -0.15); group.add(label2);
+    const roof2 = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.06, 4), milkMat);
+    roof2.position.set(-0.2, 0.65, -0.15); roof2.rotation.y = Math.PI / 4; group.add(roof2);
     
-    const can1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x003333 })); 
-    can1.position.set(0.2, 1.5, 0.1); group.add(can1);
+    // СЫРКИ (Прямоугольные брусочки в обертке)
+    const cheeseMat1 = new THREE.MeshStandardMaterial({ color: 0xffd700 }); // Золотистая обертка (как у "Александрова")
+    const cheeseMat2 = new THREE.MeshStandardMaterial({ color: 0x00bfff }); // Голубая обертка (как у "Простоквашино")
+    const cheeseLabelMat = new THREE.MeshStandardMaterial({ color: 0xffffff }); // Белая бумажка сверху
+
+    // Сырок 1 (лежит плашмя на полке)
+    const cheese1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.06), cheeseMat1);
+    cheese1.position.set(0.1, 0.43, 0.15); 
+    group.add(cheese1);
+    // Наклейка на сырке 1
+    const label1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.005, 0.04), cheeseLabelMat);
+    label1.position.set(0.1, 0.451, 0.15); 
+    group.add(label1);
+
+    // Сырок 2 (лежит рядом)
+    const cheese2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.06), cheeseMat2);
+    cheese2.position.set(0.1, 0.43, 0.02); // Чуть ближе к центру
+    group.add(cheese2);
+    const label2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.005, 0.04), cheeseLabelMat);
+    label2.position.set(0.1, 0.451, 0.02); 
+    group.add(label2);
     
-    const can2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0xff4500, emissive: 0x331100 })); 
-    can2.position.set(0.2, 1.5, -0.1); group.add(can2);
+    // Сырок 3 (стоит на боку, прижат к стенке)
+    const cheese3 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.06), cheeseMat1);
+    cheese3.position.set(-0.3, 0.46, 0.15); 
+    cheese3.rotation.x = Math.PI / 2; // Повернули на бок
+    group.add(cheese3);
+    // Наклейка на 3-м сырке (повернута вместе с ним)
+    const label3 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.005, 0.04), cheeseLabelMat);
+    label3.position.set(-0.3, 0.46, 0.181); // Сдвинули чуть вперед, чтобы не сливалась
+    label3.rotation.x = Math.PI / 2;
+    group.add(label3);
     
-    // ДВЕРЦА (Тонкая рамка по контуру, как будто дверь открыта, но мы видим её контур)
+    // --- 3. КАРКАС ДВЕРИ И РУЧКА ---
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
     const frameTop = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.05), frameMat);
     frameTop.position.set(0, 1.95, 0.4); group.add(frameTop);
@@ -516,25 +599,27 @@ function createFridge(x, z, rotY = 0) {
     const frameRight = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.9, 0.05), frameMat);
     frameRight.position.set(0.45, 1, 0.4); group.add(frameRight);
 
-    // Ручка на правой стороне
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
     handle.position.set(0.4, 1, 0.45); group.add(handle);
 
-    // ЛАМПОЧКА НА ПОТОЛКЕ
+    // --- 4. СВЕТ ---
+    // Лампочка
     const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff });
     const bulb = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 8), bulbMat);
     bulb.position.set(0, 1.8, 0); 
     group.add(bulb);
 
-    // Свет
+    // Источник света внутри
     const fridgeLight = new THREE.PointLight(0xffffff, 2, 2);
     fridgeLight.position.set(0, 1.7, 0.2);
     group.add(fridgeLight);
     
-    // Коллизия (ставим стенку-невидимку перед едой, чтобы игрок не залез внутрь)
+    // --- 5. ФИНАЛЬНАЯ УСТАНОВКА ---
     group.position.set(x, 0, z); 
     group.rotation.y = rotY; 
     scene.add(group);
+    
+    // Коллизия
     if (rotY === 0) walls.push({ x, z, width: 1, depth: 0.8 });
     else walls.push({ x, z, width: 0.8, depth: 1 });
 }
