@@ -1048,9 +1048,22 @@ for (let i = 0; i < 10; i++) {
 // 8 Желтых (на стенах, как жвачка)
 for (let i = 0; i < 8; i++) {
     const room = roomsForBugs[Math.floor(Math.random() * roomsForBugs.length)];
-    const x = room.x + (Math.random() - 0.5) * 6;
-    const z = room.z + (Math.random() - 0.5) * 6;
-    const rotY = Math.random() > 0.5 ? 0 : Math.PI / 2;
+    
+    // Выбираем случайную стену: 0 - левая, 1 - правая, 2 - верхняя, 3 - нижняя
+    const wallSide = Math.floor(Math.random() * 4);
+    let x, z, rotY;
+
+    if (wallSide === 0) { // Левая стена (смотрим вправо)
+        x = room.x - 3; z = room.z + (Math.random() - 0.5) * 4; rotY = Math.PI / 2;
+    } else if (wallSide === 1) { // Правая стена (смотрим влево)
+        x = room.x + 3; z = room.z + (Math.random() - 0.5) * 4; rotY = -Math.PI / 2;
+    } else if (wallSide === 2) { // Верхняя стена (смотрим вниз)
+        x = room.x + (Math.random() - 0.5) * 4; z = room.z - 3; rotY = 0;
+    } else { // Нижняя стена (смотрим вверх)
+        x = room.x + (Math.random() - 0.5) * 4; z = room.z + 3; rotY = Math.PI;
+    }
+
+    // Y = 1.5 (на уровне глаз)
     const bug = createBugSpill(x, 1.5, z, 0xffff00, rotY);
     activeBugs.push({ type: 'spill', mesh: bug, baseX: x, baseZ: z });
 }
@@ -1210,43 +1223,45 @@ function animate() {
     updateLamps(); 
     
     // --- АНИМАЦИЯ И ПОВЕДЕНИЕ ВСЕХ БАГОВ ---
-    const bugTime = performance.now() * 0.002;
+    // Замедлили время в 2 раза (было 0.002, стало 0.001)
+    const bugTime = performance.now() * 0.001;
 
     activeBugs.forEach(bug => {
         const b = bug.mesh;
 
         if (bug.type === 'pixel') {
-            // Зеленые: Ползают по полу, глючат
-            b.rotation.x += 0.05; 
-            b.rotation.y += 0.05;
-            b.scale.setScalar(1 + Math.sin(bugTime * 20) * 0.2);
-            b.position.z = bug.baseZ + Math.sin(bugTime * 3) * 1.5; 
+            // Зеленые: Ползают медленно (амплитуда 0.5 вместо 1.5) и глючат
+            b.rotation.x += 0.02; 
+            b.rotation.y += 0.02;
+            b.scale.setScalar(1 + Math.sin(bugTime * 10) * 0.2);
+            b.position.z = bug.baseZ + Math.sin(bugTime * 1.5) * 0.5; 
         } 
         else if (bug.type === 'spill') {
-            // Желтые: Пульсируют на стене
-            const scaleX = 0.2 + Math.sin(bugTime * 5) * 0.05; 
-            const scaleYZ = 1 + Math.sin(bugTime * 5) * 0.1;   
+            // Желтые: Медленно пульсируют на стене
+            const scaleX = 0.2 + Math.sin(bugTime * 2) * 0.05; 
+            const scaleYZ = 1 + Math.sin(bugTime * 2) * 0.1;   
             b.scale.set(scaleX, scaleYZ, scaleYZ);
         }
         else if (bug.type === 'error') {
-            // Красные: Телепорт
-            bug.ring.rotation.z += 0.05;
-            b.rotation.y += 0.02;
-            if (Math.random() < 0.005) { 
+            // Красные: Телепорт реже (шанс 0.001 вместо 0.005)
+            bug.ring.rotation.z += 0.02;
+            b.rotation.y += 0.01;
+            if (Math.random() < 0.001) { 
                 b.position.x = 5 + Math.random() * 55;
                 b.position.z = 5 + Math.random() * 55;
                 b.position.y = 1.0 + Math.random() * 2.0;
             }
         }
         else if (bug.type === 'caffeine') {
-            // Синие: Летают по всей карте
-            b.rotation.y += 0.03;
-            b.rotation.x += 0.01;
-            b.position.x = 32.5 + Math.sin(bugTime * 0.5 + bug.baseX) * 25;
-            b.position.z = 32.5 + Math.cos(bugTime * 0.4 + bug.baseZ) * 25;
-            b.position.y = 1.5 + Math.sin(bugTime * 1.5) * 1.5;
-            b.position.x += (Math.random() - 0.5) * 0.1;
-            b.position.z += (Math.random() - 0.5) * 0.1;
+            // Синие: Летают медленнее (скорость 0.2 вместо 0.5)
+            b.rotation.y += 0.01;
+            b.rotation.x += 0.005;
+            b.position.x = 32.5 + Math.sin(bugTime * 0.2 + bug.baseX) * 25;
+            b.position.z = 32.5 + Math.cos(bugTime * 0.15 + bug.baseZ) * 25;
+            b.position.y = 1.5 + Math.sin(bugTime * 0.5) * 1.5;
+            // Дрожание тоже замедлили
+            b.position.x += (Math.random() - 0.5) * 0.05;
+            b.position.z += (Math.random() - 0.5) * 0.05;
         }
     });
     
