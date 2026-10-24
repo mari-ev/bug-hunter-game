@@ -26,6 +26,8 @@ document.body.appendChild(renderer.domElement);
 const ambientLight = new THREE.AmbientLight(0x333333, 1.5); 
 scene.add(ambientLight);
 
+
+
 /* =====================================================================
    2. ТЕКСТУРЫ И МАТЕРИАЛЫ
    ===================================================================== */
@@ -69,6 +71,7 @@ const boardMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc, emissive
 const walls = [];       // Массив стен (для коллизий)
 const doors = [];       // Массив дверей (для анимации открытия)
 const allLamps = [];    // Массив всех ламп (для умного включения света)
+const activeBugs = [];  // баги
 
 /* =====================================================================
    4. ФУНКЦИИ: СТЕНЫ И ДВЕРИ
@@ -649,6 +652,104 @@ function createStairs(x, z) {
     walls.push({ x: x + 2.5, z: z + 1, width: 5, depth: 2 }); 
 }
 
+// --- 4 ВАРИАНТА ВИЗУАЛИЗАЦИИ БАГОВ ---
+
+// 1. ГЛЮЧНЫЙ ПИКСЕЛЬ (Куб, который дергается и меняет цвет)
+function createBugPixel(x, y, z, baseColor) {
+    const geometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+    const material = new THREE.MeshBasicMaterial({ color: baseColor }); // Basic, чтобы светился
+    const pixel = new THREE.Mesh(geometry, material);
+    pixel.position.set(x, y, z);
+    scene.add(pixel);
+    return pixel;
+}
+
+// 2. КРИВАЯ КЛЯКСА (Сплющенная сфера, которая пульсирует)
+function createBugSpill(x, y, z, baseColor) {
+    const geometry = new THREE.SphereGeometry(0.4, 16, 16);
+    const material = new THREE.MeshStandardMaterial({ 
+        color: baseColor, 
+        roughness: 0.1, 
+        metalness: 0.8, // Эффект жидкого кофе/масла
+        emissive: baseColor,
+        emissiveIntensity: 0.2
+    });
+    const spill = new THREE.Mesh(geometry, material);
+    spill.position.set(x, y, z);
+    spill.scale.set(1, 0.2, 1); // Сплющили в лепешку
+    scene.add(spill);
+    return spill;
+}
+
+// 3. ОШИБКА ИНТЕРФЕЙСА (Парящая сфера с кольцом)
+function createBugError(x, y, z, baseColor) {
+    const group = new THREE.Group();
+    
+    // Центральная сфера
+    const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.3, 16, 16),
+        new THREE.MeshStandardMaterial({ color: baseColor, emissive: baseColor, emissiveIntensity: 0.5 })
+    );
+    group.add(sphere);
+
+    // Вращающееся кольцо вокруг (как орбита)
+    const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.5, 0.03, 8, 32),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    ring.rotation.x = Math.PI / 2;
+    group.add(ring);
+
+    group.position.set(x, y, z);
+    scene.add(group);
+    // Возвращаем группу, чтобы анимировать кольцо
+    return { group, ring }; 
+}
+
+// 4. МИКРОБ-КОФЕИН (Пушистый комок с глазом)
+function createBugCaffeine(x, y, z, baseColor) {
+    const group = new THREE.Group();
+    
+    // Тело
+    const body = new THREE.Mesh(
+        new THREE.SphereGeometry(0.3, 16, 16),
+        new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.5 })
+    );
+    group.add(body);
+
+    // Шипы
+    const spikeMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    for(let i=0; i<8; i++) {
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.15, 8), spikeMat);
+        // Раскидываем шипы по сфере
+        const phi = Math.acos(-1 + (2 * i) / 8);
+        const theta = Math.sqrt(8 * Math.PI) * phi;
+        spike.position.setFromSphericalCoords(0.3, phi, theta);
+        spike.lookAt(0, 0, 0);
+        spike.rotateX(Math.PI / 2);
+        group.add(spike);
+    }
+
+    // Глаз
+    const eye = new THREE.Mesh(
+        new THREE.SphereGeometry(0.1, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    eye.position.set(0, 0, 0.3);
+    group.add(eye);
+    const pupil = new THREE.Mesh(
+        new THREE.SphereGeometry(0.04, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x000000 })
+    );
+    pupil.position.set(0, 0, 0.38);
+    group.add(pupil);
+
+    group.position.set(x, y, z);
+    scene.add(group);
+    return group;
+}
+
+
 /* =====================================================================
    7. СБОРКА ИГРОВОГО МИРА (УРОВНИ)
    ===================================================================== */
@@ -944,6 +1045,23 @@ createCeilingPanel(57, 19.5);
 createCeilingPanel(60, 19.5);
 createCeilingPanel(63, 19.5);
 
+// --- ТЕСТОВАЯ ЗОНА БАГОВ (в коридоре) ---
+// 1. Зеленый глючный пиксель (X=10, Y=1.5, Z=12)
+const bug1 = createBugPixel(10, 1.5, 12, 0x00ff00); 
+activeBugs.push({ type: 'pixel', mesh: bug1 });
+
+// 2. Желтая кривая клякса (X=15, Y=1.0, Z=12)
+const bug2 = createBugSpill(15, 1.0, 12, 0xffff00); 
+activeBugs.push({ type: 'spill', mesh: bug2 });
+
+// 3. Красная ошибка интерфейса (X=20, Y=1.5, Z=12)
+const bug3Data = createBugError(20, 1.5, 12, 0xff0000); 
+activeBugs.push({ type: 'error', mesh: bug3Data.group, ring: bug3Data.ring });
+
+// 4. Голубой микроб-кофеин (X=25, Y=1.5, Z=12)
+const bug4 = createBugCaffeine(25, 1.5, 12, 0x00ffff); 
+activeBugs.push({ type: 'caffeine', mesh: bug4 });
+
 /* =====================================================================
    8. ПЕРСОНАЖ
    ===================================================================== */
@@ -1085,6 +1203,38 @@ function animate() {
     updateDoors();
     updateCamera();
     updateLamps(); 
+    
+    // Анимация всех багов
+    const bugTime = performance.now() * 0.005;
+
+    activeBugs.forEach(bug => {
+        // Плавное парение (для всех)
+        bug.mesh.position.y += Math.sin(bugTime * 2 + bug.mesh.position.x) * 0.005;
+
+        if (bug.type === 'pixel') {
+            // Пиксель дергается и меняет размер
+            bug.mesh.scale.setScalar(1 + Math.sin(bugTime * 10) * 0.2);
+            bug.mesh.rotation.x += 0.1;
+            bug.mesh.rotation.y += 0.1;
+        } 
+        else if (bug.type === 'spill') {
+            // Клякса пульсирует (меняет ширину)
+            const scale = 1 + Math.sin(bugTime * 3) * 0.2;
+            bug.mesh.scale.set(scale, 0.2, scale);
+        }
+        else if (bug.type === 'error') {
+            // Кольцо ошибки быстро вращается
+            bug.ring.rotation.z += 0.05;
+            bug.mesh.rotation.y += 0.02;
+        }
+        else if (bug.type === 'caffeine') {
+            // Микроб трясется
+            bug.mesh.position.x += (Math.random() - 0.5) * 0.02;
+            bug.mesh.position.z += (Math.random() - 0.5) * 0.02;
+            bug.mesh.rotation.y += 0.05;
+        }
+    });
+    
     renderer.render(scene, camera);
 }
 animate();
