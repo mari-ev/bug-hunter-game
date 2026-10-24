@@ -652,57 +652,86 @@ function createStairs(x, z) {
     walls.push({ x: x + 2.5, z: z + 1, width: 5, depth: 2 }); 
 }
 
-// --- 4 ВАРИАНТА ВИЗУАЛИЗАЦИИ БАГОВ ---
+// --- ОБНОВЛЕННЫЕ БАГИ (Меньше, светятся, объемные) ---
 
-// 1. ГЛЮЧНЫЙ ПИКСЕЛЬ (Куб, который дергается и меняет цвет)
+// 1. ГЛЮЧНЫЙ ПИКСЕЛЬ (Куб со свечением)
 function createBugPixel(x, y, z, baseColor) {
-    const geometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-    const material = new THREE.MeshBasicMaterial({ color: baseColor }); // Basic, чтобы светился
+    // Размер уменьшили до 0.2
+    const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    const material = new THREE.MeshStandardMaterial({ 
+        color: baseColor,
+        emissive: baseColor, // Свечение
+        emissiveIntensity: 2.0 
+    }); 
     const pixel = new THREE.Mesh(geometry, material);
     pixel.position.set(x, y, z);
+    
+    // Добавляем свет внутрь
+    const light = new THREE.PointLight(baseColor, 1, 1.5);
+    pixel.add(light);
+    
     scene.add(pixel);
     return pixel;
 }
 
-// 2. КРИВАЯ КЛЯКСА (Сплющенная сфера, которая пульсирует)
+// 2. КРИВАЯ КЛЯКСА (Объемная, из нескольких сфер)
 function createBugSpill(x, y, z, baseColor) {
-    const geometry = new THREE.SphereGeometry(0.4, 16, 16);
+    const group = new THREE.Group();
     const material = new THREE.MeshStandardMaterial({ 
         color: baseColor, 
         roughness: 0.1, 
-        metalness: 0.8, // Эффект жидкого кофе/масла
+        metalness: 0.8, 
         emissive: baseColor,
-        emissiveIntensity: 0.2
+        emissiveIntensity: 1.5
     });
-    const spill = new THREE.Mesh(geometry, material);
-    spill.position.set(x, y, z);
-    spill.scale.set(1, 0.2, 1); // Сплющили в лепешку
-    scene.add(spill);
-    return spill;
+
+    // Собираем кляксу из 4-х сфер разного размера
+    const blob1 = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), material);
+    blob1.position.set(0, 0, 0);
+    group.add(blob1);
+
+    const blob2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), material);
+    blob2.position.set(0.12, -0.05, 0.05);
+    group.add(blob2);
+
+    const blob3 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), material);
+    blob3.position.set(-0.1, -0.08, -0.08);
+    group.add(blob3);
+
+    const blob4 = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), material);
+    blob4.position.set(0.05, -0.1, -0.12);
+    group.add(blob4);
+
+    group.position.set(x, y, z);
+    const light = new THREE.PointLight(baseColor, 1, 1.5);
+    group.add(light);
+    
+    scene.add(group);
+    return group;
 }
 
-// 3. ОШИБКА ИНТЕРФЕЙСА (Парящая сфера с кольцом)
+// 3. ОШИБКА ИНТЕРФЕЙСА (Сфера с кольцом)
 function createBugError(x, y, z, baseColor) {
     const group = new THREE.Group();
     
-    // Центральная сфера
     const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 16, 16),
-        new THREE.MeshStandardMaterial({ color: baseColor, emissive: baseColor, emissiveIntensity: 0.5 })
+        new THREE.SphereGeometry(0.2, 16, 16), // Уменьшили
+        new THREE.MeshStandardMaterial({ color: baseColor, emissive: baseColor, emissiveIntensity: 1.5 })
     );
     group.add(sphere);
 
-    // Вращающееся кольцо вокруг (как орбита)
     const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.5, 0.03, 8, 32),
-        new THREE.MeshBasicMaterial({ color: 0xffffff })
+        new THREE.TorusGeometry(0.35, 0.02, 8, 32), // Уменьшили
+        new THREE.MeshBasicMaterial({ color: baseColor })
     );
     ring.rotation.x = Math.PI / 2;
     group.add(ring);
 
     group.position.set(x, y, z);
+    const light = new THREE.PointLight(baseColor, 1.5, 2);
+    group.add(light);
+    
     scene.add(group);
-    // Возвращаем группу, чтобы анимировать кольцо
     return { group, ring }; 
 }
 
@@ -710,45 +739,44 @@ function createBugError(x, y, z, baseColor) {
 function createBugCaffeine(x, y, z, baseColor) {
     const group = new THREE.Group();
     
-    // Тело
     const body = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 16, 16),
-        new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.5 })
+        new THREE.SphereGeometry(0.18, 16, 16), // Уменьшили
+        new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.5, emissive: baseColor, emissiveIntensity: 0.5 })
     );
     group.add(body);
 
-    // Шипы
     const spikeMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-    for(let i=0; i<8; i++) {
-        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.15, 8), spikeMat);
-        // Раскидываем шипы по сфере
-        const phi = Math.acos(-1 + (2 * i) / 8);
-        const theta = Math.sqrt(8 * Math.PI) * phi;
-        spike.position.setFromSphericalCoords(0.3, phi, theta);
+    for(let i=0; i<10; i++) { // Шипов стало больше
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.1, 8), spikeMat);
+        const phi = Math.acos(-1 + (2 * i) / 10);
+        const theta = Math.sqrt(10 * Math.PI) * phi;
+        spike.position.setFromSphericalCoords(0.18, phi, theta);
         spike.lookAt(0, 0, 0);
         spike.rotateX(Math.PI / 2);
         group.add(spike);
     }
 
-    // Глаз
     const eye = new THREE.Mesh(
-        new THREE.SphereGeometry(0.1, 8, 8),
+        new THREE.SphereGeometry(0.07, 8, 8),
         new THREE.MeshBasicMaterial({ color: 0xffffff })
     );
-    eye.position.set(0, 0, 0.3);
+    eye.position.set(0, 0, 0.18);
     group.add(eye);
+    
     const pupil = new THREE.Mesh(
-        new THREE.SphereGeometry(0.04, 8, 8),
+        new THREE.SphereGeometry(0.03, 8, 8),
         new THREE.MeshBasicMaterial({ color: 0x000000 })
     );
-    pupil.position.set(0, 0, 0.38);
+    pupil.position.set(0, 0, 0.23);
     group.add(pupil);
 
     group.position.set(x, y, z);
+    const light = new THREE.PointLight(baseColor, 1, 1.5);
+    group.add(light);
+    
     scene.add(group);
     return group;
 }
-
 
 /* =====================================================================
    7. СБОРКА ИГРОВОГО МИРА (УРОВНИ)
@@ -1208,30 +1236,37 @@ function animate() {
     const bugTime = performance.now() * 0.005;
 
     activeBugs.forEach(bug => {
-        // Плавное парение (для всех)
+        // Плавное парение по синусоиде (для всех)
         bug.mesh.position.y += Math.sin(bugTime * 2 + bug.mesh.position.x) * 0.005;
+
+        // Движение вперед-назад (имитация патрулирования)
+        if (bug.type === 'pixel' || bug.type === 'caffeine') {
+            bug.mesh.position.x += Math.sin(bugTime) * 0.01;
+        }
 
         if (bug.type === 'pixel') {
             // Пиксель дергается и меняет размер
             bug.mesh.scale.setScalar(1 + Math.sin(bugTime * 10) * 0.2);
-            bug.mesh.rotation.x += 0.1;
-            bug.mesh.rotation.y += 0.1;
+            bug.mesh.rotation.x += 0.05;
+            bug.mesh.rotation.y += 0.05;
         } 
         else if (bug.type === 'spill') {
-            // Клякса пульсирует (меняет ширину)
-            const scale = 1 + Math.sin(bugTime * 3) * 0.2;
-            bug.mesh.scale.set(scale, 0.2, scale);
+            // Объемная клякса пульсирует целиком
+            const scale = 1 + Math.sin(bugTime * 4) * 0.15;
+            bug.mesh.scale.set(scale, scale, scale);
+            // Клякса "дышит" по оси Y
+            bug.mesh.position.y = 0.5 + Math.sin(bugTime * 2) * 0.1; 
         }
         else if (bug.type === 'error') {
-            // Кольцо ошибки быстро вращается
-            bug.ring.rotation.z += 0.05;
-            bug.mesh.rotation.y += 0.02;
+            // Кольцо ошибки вращается
+            bug.ring.rotation.z += 0.03;
+            bug.mesh.rotation.y += 0.01;
         }
         else if (bug.type === 'caffeine') {
             // Микроб трясется
             bug.mesh.position.x += (Math.random() - 0.5) * 0.02;
             bug.mesh.position.z += (Math.random() - 0.5) * 0.02;
-            bug.mesh.rotation.y += 0.05;
+            bug.mesh.rotation.y += 0.03;
         }
     });
     
