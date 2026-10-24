@@ -1045,26 +1045,38 @@ for (let i = 0; i < 10; i++) {
     activeBugs.push({ type: 'pixel', mesh: bug, baseX: x, baseZ: z });
 }
 
-// 8 Желтых (на стенах, как жвачка)
-for (let i = 0; i < 8; i++) {
-    const room = roomsForBugs[Math.floor(Math.random() * roomsForBugs.length)];
-    
-    // Выбираем случайную стену: 0 - левая, 1 - правая, 2 - верхняя, 3 - нижняя
-    const wallSide = Math.floor(Math.random() * 4);
-    let x, z, rotY;
+// 8 Желтых (на стенах, как жвачка) - ТОЧНЫЕ КООРДИНАТЫ СТЕН
+const wallPositions = [
+    // Офис 1 (стены на X=3 и X=18)
+    {x: 3, z: 4, rotY: Math.PI / 2}, {x: 18, z: 4, rotY: -Math.PI / 2},
+    // Переговорка 1 (стены на X=18 и X=30)
+    {x: 18, z: 4, rotY: Math.PI / 2}, {x: 30, z: 4, rotY: -Math.PI / 2},
+    // Холл (стены на X=30 и X=50)
+    {x: 30, z: 7, rotY: Math.PI / 2}, {x: 50, z: 7, rotY: -Math.PI / 2},
+    // Офис с каморкой (стены на X=50 и X=65)
+    {x: 50, z: 3, rotY: Math.PI / 2}, {x: 65, z: 3, rotY: -Math.PI / 2},
+    // Переговорка 2 (стены на X=53 и X=65)
+    {x: 53, z: 14, rotY: Math.PI / 2}, {x: 65, z: 14, rotY: -Math.PI / 2},
+    // Coffee Point (стены на X=59 и X=65)
+    {x: 59, z: 24, rotY: Math.PI / 2}, {x: 65, z: 24, rotY: -Math.PI / 2}
+];
 
-    if (wallSide === 0) { // Левая стена (смотрим вправо)
-        x = room.x - 3; z = room.z + (Math.random() - 0.5) * 4; rotY = Math.PI / 2;
-    } else if (wallSide === 1) { // Правая стена (смотрим влево)
-        x = room.x + 3; z = room.z + (Math.random() - 0.5) * 4; rotY = -Math.PI / 2;
-    } else if (wallSide === 2) { // Верхняя стена (смотрим вниз)
-        x = room.x + (Math.random() - 0.5) * 4; z = room.z - 3; rotY = 0;
-    } else { // Нижняя стена (смотрим вверх)
-        x = room.x + (Math.random() - 0.5) * 4; z = room.z + 3; rotY = Math.PI;
+for (let i = 0; i < 8; i++) {
+    // Берем случайную стену из списка
+    const wall = wallPositions[Math.floor(Math.random() * wallPositions.length)];
+    
+    // Добавляем небольшой разброс по высоте и вдоль стены
+    const y = 1.0 + Math.random() * 1.0; // От 1 до 2 метров
+    // Сдвигаем вдоль стены (по Z для вертикальных, по X для горизонтальных)
+    let x = wall.x;
+    let z = wall.z;
+    if (wall.rotY === Math.PI / 2 || wall.rotY === -Math.PI / 2) {
+        z += (Math.random() - 0.5) * 3; // Сдвиг по Z
+    } else {
+        x += (Math.random() - 0.5) * 3; // Сдвиг по X
     }
 
-    // Y = 1.5 (на уровне глаз)
-    const bug = createBugSpill(x, 1.5, z, 0xffff00, rotY);
+    const bug = createBugSpill(x, y, z, 0xffff00, wall.rotY);
     activeBugs.push({ type: 'spill', mesh: bug, baseX: x, baseZ: z });
 }
 
