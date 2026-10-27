@@ -22,6 +22,19 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
+const counterDiv = document.createElement('div');
+counterDiv.id = 'bug-counter';
+counterDiv.style.position = 'absolute';
+counterDiv.style.top = '20px';
+counterDiv.style.left = '20px';
+counterDiv.style.color = '#00ff00';
+counterDiv.style.fontSize = '24px';
+counterDiv.style.fontFamily = 'monospace';
+counterDiv.style.fontWeight = 'bold';
+counterDiv.style.textShadow = '2px 2px 4px #000000';
+counterDiv.innerText = 'Убито багов: 0';
+document.body.appendChild(counterDiv);
+
 // Базовый рассеянный свет (чтобы тьма была не абсолютной)
 const ambientLight = new THREE.AmbientLight(0x333333, 1.5); 
 scene.add(ambientLight);
@@ -735,128 +748,180 @@ function createBugCaffeine(x, y, z, baseColor) {
 }
 
 
-// Создание 3D-персонажа (Улучшенная версия)
+// Создание 3D-персонажа (Максимально похож на арт)
 function create3DPlayer() {
     const playerGroup = new THREE.Group();
+    
+    // Цвета (взяты с твоего арта)
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa }); // Кожа
+    const hoodieMat = new THREE.MeshStandardMaterial({ color: 0x151515 }); // Черная толстовка
+    const hoodieDarkMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a }); // Тени на одежде
+    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a }); // Темные джинсы
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x111111 }); // Черные кроссовки
+    const soleMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee }); // Белая подошва
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a }); // Темные волосы
+    const headphoneMat = new THREE.MeshStandardMaterial({ color: 0x222222 }); // Наушники
+    const backpackMat = new THREE.MeshStandardMaterial({ color: 0x4a4035 }); // Коричневатый рюкзак
+    const gunMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.6, roughness: 0.3 }); // Кофе-ган
 
-    // --- 1. НОГИ (Серые штаны) ---
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x8899aa });
-    const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.55, 0.25), legMat);
+    // --- НОГИ (Джинсы) ---
+    const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.55, 12), pantsMat);
     leftLeg.position.set(-0.15, 0.4, 0); 
     leftLeg.castShadow = true;
     playerGroup.add(leftLeg);
-
-    const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.55, 0.25), legMat);
+    
+    const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.55, 12), pantsMat);
     rightLeg.position.set(0.15, 0.4, 0);
     rightLeg.castShadow = true;
     playerGroup.add(rightLeg);
 
-    // --- 2. КРОССОВКИ (Детализированные) ---
-    const shoeBodyMat = new THREE.MeshStandardMaterial({ color: 0xcc0000 }); // Красный верх
-    const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0xffffff }); // Белая подошва
-    const shoeLaceMat = new THREE.MeshStandardMaterial({ color: 0xffffff }); // Белые шнурки
-
+    // --- КРОССОВКИ (Черные с белой подошвой) ---
     const createSneaker = (xPos) => {
-        const sneakerGroup = new THREE.Group();
-        // Верх кроссовка
-        const body = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.12, 0.4), shoeBodyMat);
-        body.position.set(0, 0.1, 0.05); sneakerGroup.add(body);
-        // Подошва (чуть шире и ниже)
-        const sole = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.42), shoeSoleMat);
-        sole.position.set(0, 0.03, 0.05); sneakerGroup.add(sole);
-        // Шнурки (полосочки сверху)
-        const laces = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.02, 0.1), shoeLaceMat);
-        laces.position.set(0, 0.17, 0.1); sneakerGroup.add(laces);
-
-        sneakerGroup.position.set(xPos, 0.05, 0);
-        return sneakerGroup;
+        const group = new THREE.Group();
+        const toe = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), shoeMat);
+        toe.scale.set(1, 0.6, 1.4);
+        toe.position.set(0, 0.1, 0.15); 
+        group.add(toe);
+        const sole = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.45), soleMat);
+        sole.position.set(0, 0.025, 0.05); 
+        group.add(sole);
+        group.position.set(xPos, 0.05, 0);
+        return group;
     };
-
     playerGroup.add(createSneaker(-0.15));
     playerGroup.add(createSneaker(0.15));
 
-    // --- 3. ТЕЛО (Красная толстовка) ---
-    const torsoMat = new THREE.MeshStandardMaterial({ color: 0xcc1111 });
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.35), torsoMat);
-    torso.position.set(0, 1.05, 0); // Приподняли над ногами
+    // --- ТЕЛО (Объемная толстовка) ---
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.32, 0.75, 16), hoodieMat);
+    torso.position.set(0, 1.05, 0); 
     torso.castShadow = true;
     playerGroup.add(torso);
 
-    // Карман на толстовке (спереди)
-    const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.2, 0.05), new THREE.MeshStandardMaterial({ color: 0xaa0000 }));
-    pocket.position.set(0, 0.85, 0.18);
+    // Карман-кенгуру
+    const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.2, 0.05), hoodieDarkMat);
+    pocket.position.set(0, 0.85, 0.33);
     playerGroup.add(pocket);
 
-    // --- 4. РУКИ И ЛАДОШКИ ---
-    const armMat = new THREE.MeshStandardMaterial({ color: 0xcc1111 });
-    const handMat = new THREE.MeshStandardMaterial({ color: 0xffccaa }); // Цвет кожи
-
-    const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.18), armMat);
-    leftArm.position.set(-0.42, 1.05, 0);
+    // --- РУКИ ---
+    const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.55, 12), hoodieMat);
+    leftArm.position.set(-0.45, 1.05, 0);
     leftArm.castShadow = true;
     playerGroup.add(leftArm);
-    // Ладошка левая
-    const leftHand = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.15, 0.16), handMat);
-    leftHand.position.set(-0.42, 0.7, 0);
+    const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), skinMat);
+    leftHand.position.set(-0.45, 0.7, 0);
     playerGroup.add(leftHand);
 
-    const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.18), armMat);
-    rightArm.position.set(0.42, 1.05, 0);
+    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.55, 12), hoodieMat);
+    rightArm.position.set(0.45, 1.05, 0);
     rightArm.castShadow = true;
     playerGroup.add(rightArm);
-    // Ладошка правая
-    const rightHand = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.15, 0.16), handMat);
-    rightHand.position.set(0.42, 0.7, 0);
+    const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), skinMat);
+    rightHand.position.set(0.45, 0.7, 0);
     playerGroup.add(rightHand);
 
-    // --- 5. ГОЛОВА И ВОЛОСЫ ---
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.42), headMat);
-    head.position.set(0, 1.65, 0); 
-    head.castShadow = true;
-    playerGroup.add(head);
+    // --- ОРУЖИЕ И КРУЖКА (В руках) ---
+    // Кофе-ган в правой руке
+    const gunGroup = new THREE.Group();
+    const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.35), gunMat);
+    gunBody.position.set(0, 0, 0.15);
+    gunGroup.add(gunBody);
+    const gunBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.2, 8), gunMat);
+    gunBarrel.rotation.x = Math.PI / 2;
+    gunBarrel.position.set(0, 0.03, 0.4);
+    gunGroup.add(gunBarrel);
+    gunGroup.position.set(0.45, 0.7, 0.1); // Привязали к правой руке
+    playerGroup.add(gunGroup);
 
-    // Волосы (Красные, как на картинке)
-    const hairMat = new THREE.MeshStandardMaterial({ color: 0xaa2222 });
-    const hairTop = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.15, 0.44), hairMat);
-    hairTop.position.set(0, 1.9, 0); // На макушке
-    playerGroup.add(hairTop);
-    // Чубчик/челка спереди
-    const hairBangs = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.1, 0.1), hairMat);
-    hairBangs.position.set(0, 1.8, 0.18); 
-    playerGroup.add(hairBangs);
+    // Кружка кофе в левой руке
+    const mugGroup = new THREE.Group();
+    const mugBody = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 12), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+    mugGroup.add(mugBody);
+    const mugLabel = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.01), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    mugLabel.position.set(0, 0, 0.08);
+    mugGroup.add(mugLabel);
+    mugGroup.position.set(-0.45, 0.6, 0.05); // Привязали к левой руке
+    playerGroup.add(mugGroup);
 
-    // --- 6. РЮКЗАК (Сзади) ---
-    const backpackMat = new THREE.MeshStandardMaterial({ color: 0x224488 }); // Синий рюкзак
-    const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.55, 0.25), backpackMat);
-    backpack.position.set(0, 1.05, -0.3); // Сдвинут назад
+    // --- ГОЛОВА И ЛИЦО ---
+    const headGroup = new THREE.Group();
+    const skull = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), skinMat);
+    skull.scale.set(0.9, 1.1, 0.95);
+    skull.castShadow = true;
+    headGroup.add(skull);
+    
+    // Глаза (анимешные, большие)
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
+    eyeL.position.set(-0.08, 0.05, 0.19);
+    headGroup.add(eyeL);
+    const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), pupilMat);
+    pupilL.position.set(-0.08, 0.05, 0.22);
+    headGroup.add(pupilL);
+    
+    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
+    eyeR.position.set(0.08, 0.05, 0.19);
+    headGroup.add(eyeR);
+    const pupilR = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), pupilMat);
+    pupilR.position.set(0.08, 0.05, 0.22);
+    headGroup.add(pupilR);
+
+    // Рот
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.01, 0.01), pupilMat);
+    mouth.position.set(0, -0.1, 0.2);
+    headGroup.add(mouth);
+
+    // Волосы (торчат из-под капюшона)
+    const bangs = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.1, 0.12), hairMat);
+    bangs.position.set(0, 0.12, 0.18);
+    bangs.rotation.x = 0.2;
+    headGroup.add(bangs);
+
+    headGroup.position.set(0, 1.65, 0);
+    playerGroup.add(headGroup);
+
+    // --- КАПЮШОН ---
+    const hood = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16, 0, Math.PI * 2, 0, Math.PI / 1.5), hoodieMat);
+    hood.position.set(0, 0.05, -0.05); 
+    hood.scale.set(1.1, 1.1, 1.1);
+    headGroup.add(hood);
+
+    // --- НАУШНИКИ ПОВЕРХ КАПЮШОНА ---
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.03, 8, 16, Math.PI), headphoneMat);
+    band.rotation.z = Math.PI;
+    band.position.set(0, 0.1, 0);
+    headGroup.add(band);
+    
+    const cupL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 12), headphoneMat);
+    cupL.rotation.z = Math.PI / 2;
+    cupL.position.set(-0.3, 0, 0);
+    headGroup.add(cupL);
+    const cupR = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 12), headphoneMat);
+    cupR.rotation.z = Math.PI / 2;
+    cupR.position.set(0.3, 0, 0);
+    headGroup.add(cupR);
+
+    // --- РЮКЗАК ---
+    const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.25), backpackMat);
+    backpack.position.set(0, 1.05, -0.35); 
     backpack.castShadow = true;
     playerGroup.add(backpack);
+    
+    // Труба на рюкзаке (как на арте)
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), hoodieMat);
+    tube.rotation.z = -0.3;
+    tube.position.set(0.15, 1.35, -0.35);
+    playerGroup.add(tube);
 
-    // Лямки рюкзака (спереди на плечах)
-    const strapMat = new THREE.MeshStandardMaterial({ color: 0x112244 });
-    const strapL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.05), strapMat);
-    strapL.position.set(-0.2, 1.1, 0.18);
+    // Лямки рюкзака
+    const strapL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.45, 0.05), hoodieDarkMat);
+    strapL.position.set(-0.2, 1.15, 0.3);
     playerGroup.add(strapL);
-    const strapR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.05), strapMat);
-    strapR.position.set(0.2, 1.1, 0.18);
+    const strapR = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.45, 0.05), hoodieDarkMat);
+    strapR.position.set(0.2, 1.15, 0.3);
     playerGroup.add(strapR);
 
-    // --- 7. НАУШНИКИ (Оставляем) ---
-    const headphoneMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-    const band = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.08, 0.1), headphoneMat);
-    band.position.set(0, 1.9, 0); // На волосах
-    playerGroup.add(band);
-    const cupL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.1, 12), headphoneMat);
-    cupL.rotation.z = Math.PI / 2;
-    cupL.position.set(-0.24, 1.65, 0);
-    playerGroup.add(cupL);
-    const cupR = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.1, 12), headphoneMat);
-    cupR.rotation.z = Math.PI / 2;
-    cupR.position.set(0.24, 1.65, 0);
-    playerGroup.add(cupR);
-
-    // Сохраняем ссылки на руки и ноги для анимации
+    // Сохраняем ссылки для анимации
     playerGroup.userData = {
         leftLeg: leftLeg,
         rightLeg: rightLeg,
@@ -1255,28 +1320,80 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let targetPosition = new THREE.Vector3(player.position.x, 1.0, player.position.z);
 let hasTarget = false;
+
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
+let wasDragging = false; // Флаг, чтобы отличить клик от вращения камеры
 
+// --- 1. ПК: Вращение камеры правой кнопкой мыши ---
+renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault()); // Отключаем меню ПКМ
+
+renderer.domElement.addEventListener('mousedown', (e) => {
+    if (e.button === 2) { // Правая кнопка мыши
+        isDragging = true; 
+        wasDragging = false;
+        previousMousePosition = { x: e.offsetX, y: e.offsetY }; 
+    }
+});
+
+renderer.domElement.addEventListener('mousemove', (e) => {
+    if (isDragging) { 
+        const deltaX = e.offsetX - previousMousePosition.x; 
+        cameraAngle -= deltaX * 0.01; 
+        previousMousePosition = { x: e.offsetX, y: e.offsetY };
+        wasDragging = true; 
+    }
+});
+
+renderer.domElement.addEventListener('mouseup', (e) => { 
+    if (e.button === 2) isDragging = false; 
+});
+
+// --- 2. ПЛАНШЕТ: Вращение камеры двумя пальцами ---
+renderer.domElement.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) { 
+        isDragging = true; 
+        wasDragging = false;
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        previousMousePosition = { x: midX, y: 0 }; 
+    }
+}, { passive: false });
+
+renderer.domElement.addEventListener('touchmove', (e) => {
+    if (isDragging && e.touches.length === 2) { 
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const deltaX = midX - previousMousePosition.x; 
+        cameraAngle -= deltaX * 0.01; 
+        previousMousePosition = { x: midX, y: 0 };
+        wasDragging = true;
+    }
+}, { passive: false });
+
+renderer.domElement.addEventListener('touchend', (e) => { 
+    if (e.touches.length < 2) isDragging = false; 
+});
+
+// --- 3. КЛИК (Стрельба или Ходьба) ---
 renderer.domElement.addEventListener('click', (e) => {
+    // Если мы только что крутили камеру, клик игнорируется
+    if (wasDragging) {
+        wasDragging = false;
+        return; 
+    }
     if (isDragging) return;
-    
+
     // Получаем координаты мыши
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1; 
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
 
     // Сначала проверяем, попали ли мы в багов
-    // Собираем все меши багов в один массив для проверки
     const bugMeshes = activeBugs.map(bug => bug.type === 'error' ? bug.mesh : bug.mesh);
-    // Для группы (error, caffeine, spill) raycaster проверяет только сам объект, если не указать true (recursive)
     const bugIntersects = raycaster.intersectObjects(bugMeshes, true);
 
     if (bugIntersects.length > 0) {
-        // Мы попали в бага!
         const hitObject = bugIntersects[0].object;
         
-        // Находим, какому багу принадлежит этот объект (проверяем родителей)
         let bugToKill = activeBugs.find(b => {
             if (b.type === 'error') return b.mesh === hitObject.parent || b.mesh === hitObject;
             if (b.type === 'caffeine' || b.type === 'spill') return b.mesh === hitObject.parent || b.mesh === hitObject;
@@ -1284,24 +1401,19 @@ renderer.domElement.addEventListener('click', (e) => {
         });
 
         if (bugToKill) {
-            // Удаляем с экрана
             scene.remove(bugToKill.mesh);
-            // Удаляем из массива активных багов
             activeBugs.splice(activeBugs.indexOf(bugToKill), 1);
             
-            // Обновляем счетчик
             bugsKilled++;
-            // Обновляем текст на экране (если у тебя есть такой HTML элемент)
-            const counterEl = document.getElementById('bug-counter'); // Или как он у тебя называется
+            const counterEl = document.getElementById('bug-counter');
             if (counterEl) counterEl.innerText = `Убито багов: ${bugsKilled}`;
-            // Если это просто canvas без HTML, можно вывести в консоль:
             console.log("Баг убит! Всего:", bugsKilled);
             
             return; // Выходим, чтобы персонаж не пошел в точку клика
         }
     }
 
-    // Если мы не попали в бага, то идем по полу (твой старый код)
+    // Если не попали в бага — идем по полу
     const intersects = raycaster.intersectObject(floor);
     if (intersects.length > 0) { 
         targetPosition.set(intersects[0].point.x, 1.0, intersects[0].point.z); 
