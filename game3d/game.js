@@ -734,6 +734,141 @@ function createBugCaffeine(x, y, z, baseColor) {
     return group;
 }
 
+
+// Создание 3D-персонажа (Улучшенная версия)
+function create3DPlayer() {
+    const playerGroup = new THREE.Group();
+
+    // --- 1. НОГИ (Серые штаны) ---
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x8899aa });
+    const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.55, 0.25), legMat);
+    leftLeg.position.set(-0.15, 0.4, 0); 
+    leftLeg.castShadow = true;
+    playerGroup.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.55, 0.25), legMat);
+    rightLeg.position.set(0.15, 0.4, 0);
+    rightLeg.castShadow = true;
+    playerGroup.add(rightLeg);
+
+    // --- 2. КРОССОВКИ (Детализированные) ---
+    const shoeBodyMat = new THREE.MeshStandardMaterial({ color: 0xcc0000 }); // Красный верх
+    const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0xffffff }); // Белая подошва
+    const shoeLaceMat = new THREE.MeshStandardMaterial({ color: 0xffffff }); // Белые шнурки
+
+    const createSneaker = (xPos) => {
+        const sneakerGroup = new THREE.Group();
+        // Верх кроссовка
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.12, 0.4), shoeBodyMat);
+        body.position.set(0, 0.1, 0.05); sneakerGroup.add(body);
+        // Подошва (чуть шире и ниже)
+        const sole = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.42), shoeSoleMat);
+        sole.position.set(0, 0.03, 0.05); sneakerGroup.add(sole);
+        // Шнурки (полосочки сверху)
+        const laces = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.02, 0.1), shoeLaceMat);
+        laces.position.set(0, 0.17, 0.1); sneakerGroup.add(laces);
+
+        sneakerGroup.position.set(xPos, 0.05, 0);
+        return sneakerGroup;
+    };
+
+    playerGroup.add(createSneaker(-0.15));
+    playerGroup.add(createSneaker(0.15));
+
+    // --- 3. ТЕЛО (Красная толстовка) ---
+    const torsoMat = new THREE.MeshStandardMaterial({ color: 0xcc1111 });
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.35), torsoMat);
+    torso.position.set(0, 1.05, 0); // Приподняли над ногами
+    torso.castShadow = true;
+    playerGroup.add(torso);
+
+    // Карман на толстовке (спереди)
+    const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.2, 0.05), new THREE.MeshStandardMaterial({ color: 0xaa0000 }));
+    pocket.position.set(0, 0.85, 0.18);
+    playerGroup.add(pocket);
+
+    // --- 4. РУКИ И ЛАДОШКИ ---
+    const armMat = new THREE.MeshStandardMaterial({ color: 0xcc1111 });
+    const handMat = new THREE.MeshStandardMaterial({ color: 0xffccaa }); // Цвет кожи
+
+    const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.18), armMat);
+    leftArm.position.set(-0.42, 1.05, 0);
+    leftArm.castShadow = true;
+    playerGroup.add(leftArm);
+    // Ладошка левая
+    const leftHand = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.15, 0.16), handMat);
+    leftHand.position.set(-0.42, 0.7, 0);
+    playerGroup.add(leftHand);
+
+    const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.18), armMat);
+    rightArm.position.set(0.42, 1.05, 0);
+    rightArm.castShadow = true;
+    playerGroup.add(rightArm);
+    // Ладошка правая
+    const rightHand = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.15, 0.16), handMat);
+    rightHand.position.set(0.42, 0.7, 0);
+    playerGroup.add(rightHand);
+
+    // --- 5. ГОЛОВА И ВОЛОСЫ ---
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.42), headMat);
+    head.position.set(0, 1.65, 0); 
+    head.castShadow = true;
+    playerGroup.add(head);
+
+    // Волосы (Красные, как на картинке)
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0xaa2222 });
+    const hairTop = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.15, 0.44), hairMat);
+    hairTop.position.set(0, 1.9, 0); // На макушке
+    playerGroup.add(hairTop);
+    // Чубчик/челка спереди
+    const hairBangs = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.1, 0.1), hairMat);
+    hairBangs.position.set(0, 1.8, 0.18); 
+    playerGroup.add(hairBangs);
+
+    // --- 6. РЮКЗАК (Сзади) ---
+    const backpackMat = new THREE.MeshStandardMaterial({ color: 0x224488 }); // Синий рюкзак
+    const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.55, 0.25), backpackMat);
+    backpack.position.set(0, 1.05, -0.3); // Сдвинут назад
+    backpack.castShadow = true;
+    playerGroup.add(backpack);
+
+    // Лямки рюкзака (спереди на плечах)
+    const strapMat = new THREE.MeshStandardMaterial({ color: 0x112244 });
+    const strapL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.05), strapMat);
+    strapL.position.set(-0.2, 1.1, 0.18);
+    playerGroup.add(strapL);
+    const strapR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.05), strapMat);
+    strapR.position.set(0.2, 1.1, 0.18);
+    playerGroup.add(strapR);
+
+    // --- 7. НАУШНИКИ (Оставляем) ---
+    const headphoneMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    const band = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.08, 0.1), headphoneMat);
+    band.position.set(0, 1.9, 0); // На волосах
+    playerGroup.add(band);
+    const cupL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.1, 12), headphoneMat);
+    cupL.rotation.z = Math.PI / 2;
+    cupL.position.set(-0.24, 1.65, 0);
+    playerGroup.add(cupL);
+    const cupR = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.1, 12), headphoneMat);
+    cupR.rotation.z = Math.PI / 2;
+    cupR.position.set(0.24, 1.65, 0);
+    playerGroup.add(cupR);
+
+    // Сохраняем ссылки на руки и ноги для анимации
+    playerGroup.userData = {
+        leftLeg: leftLeg,
+        rightLeg: rightLeg,
+        leftArm: leftArm,
+        rightArm: rightArm,
+        leftHand: leftHand,
+        rightHand: rightHand
+    };
+
+    return playerGroup;
+}
+
 /* =====================================================================
    7. СБОРКА ИГРОВОГО МИРА (УРОВНИ)
    ===================================================================== */
@@ -1103,11 +1238,10 @@ for (let i = 0; i < 2; i++) {
 /* =====================================================================
    8. ПЕРСОНАЖ
    ===================================================================== */
-const playerTexture = new THREE.TextureLoader().load('assets/player.png');
-const playerGeometry = new THREE.PlaneGeometry(1.6, 2.0); 
-const playerMaterial = new THREE.MeshBasicMaterial({ map: playerTexture, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
-const player = new THREE.Mesh(playerGeometry, playerMaterial);
-player.position.set(5, 1.0, 4);
+// === НОВЫЙ 3D ПЕРСОНАЖ ===
+const player = create3DPlayer();
+// Ставим его на пол (Y = 0) в стартовую точку
+player.position.set(5, 0, 4);
 scene.add(player);
 
 /* =====================================================================
@@ -1215,8 +1349,9 @@ function updatePlayer() {
     }
     if (canMoveTo(newX, player.position.z)) player.position.x = newX;
     if (canMoveTo(player.position.x, newZ)) player.position.z = newZ;
-    player.lookAt(camera.position.x, camera.position.y, camera.position.z);
-    player.rotation.x = 0; player.rotation.z = 0;
+    // Поворачиваем 3D-модель в сторону движения или камеры
+    const angle = Math.atan2(camera.position.x - player.position.x, camera.position.z - player.position.z);
+    player.rotation.y = angle;
 }
 
 function updateCamera() {
@@ -1268,6 +1403,23 @@ function animate() {
     updateDoors();
     updateCamera();
     updateLamps(); 
+    
+    
+    // Анимация ходьбы персонажа
+    if (keys['w'] || keys['s'] || keys['a'] || keys['d'] || hasTarget) {
+        // Если персонаж движется, качаем руками и ногами
+        const walkTime = performance.now() * 0.008;
+        player.userData.leftLeg.rotation.x = Math.sin(walkTime) * 0.5;
+        player.userData.rightLeg.rotation.x = -Math.sin(walkTime) * 0.5;
+        player.userData.leftArm.rotation.x = -Math.sin(walkTime) * 0.5;
+        player.userData.rightArm.rotation.x = Math.sin(walkTime) * 0.5;
+    } else {
+        // Если стоит на месте — плавно возвращаем в исходное положение
+        player.userData.leftLeg.rotation.x *= 0.8;
+        player.userData.rightLeg.rotation.x *= 0.8;
+        player.userData.leftArm.rotation.x *= 0.8;
+        player.userData.rightArm.rotation.x *= 0.8;
+    }
     
     // --- АНИМАЦИЯ И ПОВЕДЕНИЕ ВСЕХ БАГОВ ---
     // Замедлили время в 2 раза (было 0.002, стало 0.001)
