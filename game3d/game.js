@@ -71,7 +71,8 @@ const boardMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc, emissive
 const walls = [];       // Массив стен (для коллизий)
 const doors = [];       // Массив дверей (для анимации открытия)
 const allLamps = [];    // Массив всех ламп (для умного включения света)
-const activeBugs = [];  // баги
+const activeBugs = [];
+let bugsKilled = 0;
 
 /* =====================================================================
    4. ФУНКЦИИ: СТЕНЫ И ДВЕРИ
@@ -1036,45 +1037,55 @@ const roomsForBugs = [
     {x: 59, z: 14}, {x: 62, z: 24}, {x: 54, z: 22}
 ];
 
-// 10 Зеленых (на полу)
+// 10 Зеленых (на полу, прячутся по углам и за мебелью)
+const roomsForBugs = [
+    {x: 7, z: 4}, {x: 24, z: 4}, {x: 40, z: 7}, {x: 55, z: 3}, 
+    {x: 59, z: 14}, {x: 62, z: 24}, {x: 54, z: 22}
+];
+
 for (let i = 0; i < 10; i++) {
     const room = roomsForBugs[Math.floor(Math.random() * roomsForBugs.length)];
-    const x = room.x + (Math.random() - 0.5) * 6;
-    const z = room.z + (Math.random() - 0.5) * 6;
+    
+    // Сдвигаем к краю комнаты (от 2 до 4 метров от центра)
+    const offset = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 2);
+    const isX = Math.random() > 0.5; // Двигаем либо по X, либо по Z
+    
+    const x = isX ? room.x + offset : room.x + (Math.random() - 0.5) * 2;
+    const z = isX ? room.z + (Math.random() - 0.5) * 2 : room.z + offset;
+    
+    // Y = 0.2, чтобы ползали по полу
     const bug = createBugPixel(x, 0.2, z, 0x00ff00);
     activeBugs.push({ type: 'pixel', mesh: bug, baseX: x, baseZ: z });
 }
 
-// 8 Желтых (на стенах, как жвачка) - ТОЧНЫЕ КООРДИНАТЫ СТЕН
+// 8 Желтых (на стенах, как жвачка)
 const wallPositions = [
-    // Офис 1 (стены на X=3 и X=18)
     {x: 3, z: 4, rotY: Math.PI / 2}, {x: 18, z: 4, rotY: -Math.PI / 2},
-    // Переговорка 1 (стены на X=18 и X=30)
     {x: 18, z: 4, rotY: Math.PI / 2}, {x: 30, z: 4, rotY: -Math.PI / 2},
-    // Холл (стены на X=30 и X=50)
     {x: 30, z: 7, rotY: Math.PI / 2}, {x: 50, z: 7, rotY: -Math.PI / 2},
-    // Офис с каморкой (стены на X=50 и X=65)
     {x: 50, z: 3, rotY: Math.PI / 2}, {x: 65, z: 3, rotY: -Math.PI / 2},
-    // Переговорка 2 (стены на X=53 и X=65)
     {x: 53, z: 14, rotY: Math.PI / 2}, {x: 65, z: 14, rotY: -Math.PI / 2},
-    // Coffee Point (стены на X=59 и X=65)
     {x: 59, z: 24, rotY: Math.PI / 2}, {x: 65, z: 24, rotY: -Math.PI / 2}
 ];
 
+const shuffledWalls = [...wallPositions].sort(() => Math.random() - 0.5);
+
 for (let i = 0; i < 8; i++) {
-    // Берем случайную стену из списка
-    const wall = wallPositions[Math.floor(Math.random() * wallPositions.length)];
+    const wall = shuffledWalls[i % shuffledWalls.length];
     
-    // Добавляем небольшой разброс по высоте и вдоль стены
-    const y = 1.0 + Math.random() * 1.0; // От 1 до 2 метров
-    // Сдвигаем вдоль стены (по Z для вертикальных, по X для горизонтальных)
+    // Высота от 1.5 до 2.5 метров (могут висеть над дверьми или под потолком)
+    const y = 1.5 + Math.random() * 1.0; 
     let x = wall.x;
     let z = wall.z;
+    
     if (wall.rotY === Math.PI / 2 || wall.rotY === -Math.PI / 2) {
-        z += (Math.random() - 0.5) * 3; // Сдвиг по Z
+        z += (Math.random() - 0.5) * 4; 
     } else {
-        x += (Math.random() - 0.5) * 3; // Сдвиг по X
+        x += (Math.random() - 0.5) * 4; 
     }
+
+    if (wall.rotY === Math.PI / 2) x += 0.1;
+    else if (wall.rotY === -Math.PI / 2) x -= 0.1;
 
     const bug = createBugSpill(x, y, z, 0xffff00, wall.rotY);
     activeBugs.push({ type: 'spill', mesh: bug, baseX: x, baseZ: z });
@@ -1116,28 +1127,55 @@ let hasTarget = false;
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 
-renderer.domElement.addEventListener('mousedown', (e) => {
-    if (e.button === 0) { isDragging = true; previousMousePosition = { x: e.offsetX, y: e.offsetY }; }
-});
-renderer.domElement.addEventListener('mousemove', (e) => {
-    if (isDragging) { const deltaX = e.offsetX - previousMousePosition.x; cameraAngle -= deltaX * 0.01; previousMousePosition = { x: e.offsetX, y: e.offsetY }; }
-});
-renderer.domElement.addEventListener('mouseup', () => { isDragging = false; });
-
-renderer.domElement.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) { isDragging = true; previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
-}, { passive: false });
-renderer.domElement.addEventListener('touchmove', (e) => {
-    if (isDragging && e.touches.length === 1) { const deltaX = e.touches[0].clientX - previousMousePosition.x; cameraAngle -= deltaX * 0.01; previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
-}, { passive: false });
-renderer.domElement.addEventListener('touchend', () => { isDragging = false; });
-
 renderer.domElement.addEventListener('click', (e) => {
     if (isDragging) return;
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    
+    // Получаем координаты мыши
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1; 
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
+
+    // Сначала проверяем, попали ли мы в багов
+    // Собираем все меши багов в один массив для проверки
+    const bugMeshes = activeBugs.map(bug => bug.type === 'error' ? bug.mesh : bug.mesh);
+    // Для группы (error, caffeine, spill) raycaster проверяет только сам объект, если не указать true (recursive)
+    const bugIntersects = raycaster.intersectObjects(bugMeshes, true);
+
+    if (bugIntersects.length > 0) {
+        // Мы попали в бага!
+        const hitObject = bugIntersects[0].object;
+        
+        // Находим, какому багу принадлежит этот объект (проверяем родителей)
+        let bugToKill = activeBugs.find(b => {
+            if (b.type === 'error') return b.mesh === hitObject.parent || b.mesh === hitObject;
+            if (b.type === 'caffeine' || b.type === 'spill') return b.mesh === hitObject.parent || b.mesh === hitObject;
+            return b.mesh === hitObject;
+        });
+
+        if (bugToKill) {
+            // Удаляем с экрана
+            scene.remove(bugToKill.mesh);
+            // Удаляем из массива активных багов
+            activeBugs.splice(activeBugs.indexOf(bugToKill), 1);
+            
+            // Обновляем счетчик
+            bugsKilled++;
+            // Обновляем текст на экране (если у тебя есть такой HTML элемент)
+            const counterEl = document.getElementById('bug-counter'); // Или как он у тебя называется
+            if (counterEl) counterEl.innerText = `Убито багов: ${bugsKilled}`;
+            // Если это просто canvas без HTML, можно вывести в консоль:
+            console.log("Баг убит! Всего:", bugsKilled);
+            
+            return; // Выходим, чтобы персонаж не пошел в точку клика
+        }
+    }
+
+    // Если мы не попали в бага, то идем по полу (твой старый код)
     const intersects = raycaster.intersectObject(floor);
-    if (intersects.length > 0) { targetPosition.set(intersects[0].point.x, 1.0, intersects[0].point.z); hasTarget = true; }
+    if (intersects.length > 0) { 
+        targetPosition.set(intersects[0].point.x, 1.0, intersects[0].point.z); 
+        hasTarget = true; 
+    }
 });
 
 /* =====================================================================
