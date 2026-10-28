@@ -1120,38 +1120,54 @@ for (let i = 0; i < 2; i++) {
    8. ПЕРСОНАЖ
    ===================================================================== */
 // ==========================================
+// ==========================================
 // ЗАГРУЗКА 3D-ПЕРСОНАЖА ИЗ VRM
 // ==========================================
-let player = new THREE.Group(); // Временная пустышка, пока грузится модель
-player.position.set(5, 0, 4); // Ставим на пол в стартовую точку
+let player = new THREE.Group(); 
+player.position.set(5, 0, 4); 
 scene.add(player);
 
+let mixer; // Нам понадобится это для анимаций
+let actionIdle; // Стоять на месте
+let actionWalk; // Идти
+
 const loader = new GLTFLoader();
-// Подключаем плагин для VRM
 loader.register((parser) => new VRMLoaderPlugin(parser));
 
-// Загружаем файл (название должно совпадать с тем, что ты загрузила в папку)
 loader.load('bug_hunter.vrm', (gltf) => {
-    const vrm = gltf.userData.vrm; // Достаем VRM-данные
-    const vrmModel = vrm.scene; // Это и есть наша 3D-модель
+    const vrm = gltf.userData.vrm; 
+    const vrmModel = vrm.scene; 
 
-    // Настройка персонажа
     vrmModel.castShadow = true;
     vrmModel.receiveShadow = true;
     
-    // В Three.js VRM-модели часто развернуты спиной к нам. 
-    // Если он будет смотреть в стену, поменяй Math.PI на 0
-    vrmModel.rotation.y = Math.PI; 
+    // ПОВОРАЧИВАЕМ ЛИЦОМ К НАМ (на 180 градусов)
+    vrmModel.rotation.y = 0; 
 
-    // Удаляем пустышку и ставим настоящую модель
     scene.remove(player);
     player = vrmModel;
     player.position.set(5, 0, 4);
     scene.add(player);
     
+    // Настраиваем анимации (если они есть в модели)
+    if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(player);
+        
+        // Ищем анимацию покоя и ходьбы
+        const idleClip = THREE.AnimationClip.findByName(gltf.animations, 'Idle');
+        const walkClip = THREE.AnimationClip.findByName(gltf.animations, 'Walk');
+        
+        if (idleClip) {
+            actionIdle = mixer.clipAction(idleClip);
+            actionIdle.play();
+        }
+        if (walkClip) {
+            actionWalk = mixer.clipAction(walkClip);
+        }
+    }
+    
     console.log("Персонаж VRM успешно загружен!");
 });
-
 /* =====================================================================
    9. УПРАВЛЕНИЕ (Мышь, Тач, Клавиатура)
    ===================================================================== */
@@ -1310,12 +1326,17 @@ function updatePlayer() {
 }
 
 function updateCamera() {
+    if (!player) return;
+
     const targetCamX = player.position.x + Math.sin(cameraAngle) * cameraDistance;
     const targetCamZ = player.position.z + Math.cos(cameraAngle) * cameraDistance;
+    
+    // Плавно двигаем камеру
     camera.position.lerp(new THREE.Vector3(targetCamX, player.position.y + cameraHeight, targetCamZ), 0.1);
-    camera.lookAt(player.position.x, player.position.y + 0.6, player.position.z);
+    
+    // Камера смотрит на персонажа (чуть выше пояса)
+    camera.lookAt(player.position.x, player.position.y + 1.2, player.position.z);
 }
-
 /* =====================================================================
    11. УМНЫЙ СВЕТ
 ===================================================================== */
@@ -1358,6 +1379,44 @@ function animate() {
     updateDoors();
     updateCamera();
     updateLamps(); 
+    
+    // Обновляем анимации (если они есть)
+    if (mixer) {
+        mixer.update(0.016); // Обновляем время анимации
+    }
+
+    // Проверяем, движется ли игрок
+    const isMoving = keys['w'] || keys['s'] || keys['a'] || keys['d'] || hasTarget;
+
+    if (player) {
+        // Включаем анимацию ходьбы или покоя
+        if (mixer && actionWalk && actionIdle) {
+            if (isMoving) {
+                actionIdle.stop();
+                actionWalk.play();
+            } else {
+                actionWalk.stop();
+                actionIdle.play();
+            }
+        }
+
+        // Поворачиваем персонажа в сторону движения
+        if (isMoving) {
+            // Вычисляем угол движения
+            let targetAngle = player.rotation.y;
+            if (hasTarget) {
+                targetAngle = Math.atan2(targetPosition.x - player.position.x, targetPosition.z - player.position.z);
+            } else {
+                if (keys['w']) targetAngle = Math.PI; // Вперед
+                if (keys['s']) targetAngle = 0;      // Назад
+                if (keys['a']) targetAngle = Math.PI / 2; // Влево
+                if (keys['d']) targetAngle = -Math.PI / 2; // Вправо
+            }
+            
+            // Плавный поворот модели
+            player.rotation.y = targetAngle;
+        }
+    }
     
     
     // --- АНИМАЦИЯ И ПОВЕДЕНИЕ ВСЕХ БАГОВ ---
