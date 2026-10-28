@@ -1,8 +1,10 @@
 /* =====================================================================
    1. ИНИЦИАЛИЗАЦИЯ И НАСТРОЙКА THREE.JS
    ===================================================================== */
-import * as THREE from 'three';
-import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { RectAreaLightUniformsLib } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/lights/RectAreaLightUniformsLib.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { VRMLoaderPlugin } from 'https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.1.1/lib/three-vrm.module.min.js';
 
 RectAreaLightUniformsLib.init();
 
@@ -748,192 +750,6 @@ function createBugCaffeine(x, y, z, baseColor) {
 }
 
 
-// Создание 3D-персонажа (Максимально похож на арт)
-function create3DPlayer() {
-    const playerGroup = new THREE.Group();
-    
-    // Цвета (взяты с твоего арта)
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa }); // Кожа
-    const hoodieMat = new THREE.MeshStandardMaterial({ color: 0x151515 }); // Черная толстовка
-    const hoodieDarkMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a }); // Тени на одежде
-    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a }); // Темные джинсы
-    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x111111 }); // Черные кроссовки
-    const soleMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee }); // Белая подошва
-    const hairMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a }); // Темные волосы
-    const headphoneMat = new THREE.MeshStandardMaterial({ color: 0x222222 }); // Наушники
-    const backpackMat = new THREE.MeshStandardMaterial({ color: 0x4a4035 }); // Коричневатый рюкзак
-    const gunMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.6, roughness: 0.3 }); // Кофе-ган
-
-    // --- НОГИ (Джинсы) ---
-    const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.55, 12), pantsMat);
-    leftLeg.position.set(-0.15, 0.4, 0); 
-    leftLeg.castShadow = true;
-    playerGroup.add(leftLeg);
-    
-    const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.55, 12), pantsMat);
-    rightLeg.position.set(0.15, 0.4, 0);
-    rightLeg.castShadow = true;
-    playerGroup.add(rightLeg);
-
-    // --- КРОССОВКИ (Черные с белой подошвой) ---
-    const createSneaker = (xPos) => {
-        const group = new THREE.Group();
-        const toe = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), shoeMat);
-        toe.scale.set(1, 0.6, 1.4);
-        toe.position.set(0, 0.1, 0.15); 
-        group.add(toe);
-        const sole = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.45), soleMat);
-        sole.position.set(0, 0.025, 0.05); 
-        group.add(sole);
-        group.position.set(xPos, 0.05, 0);
-        return group;
-    };
-    playerGroup.add(createSneaker(-0.15));
-    playerGroup.add(createSneaker(0.15));
-
-    // --- ТЕЛО (Объемная толстовка) ---
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.32, 0.75, 16), hoodieMat);
-    torso.position.set(0, 1.05, 0); 
-    torso.castShadow = true;
-    playerGroup.add(torso);
-
-    // Карман-кенгуру
-    const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.2, 0.05), hoodieDarkMat);
-    pocket.position.set(0, 0.85, 0.33);
-    playerGroup.add(pocket);
-
-    // --- РУКИ ---
-    const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.55, 12), hoodieMat);
-    leftArm.position.set(-0.45, 1.05, 0);
-    leftArm.castShadow = true;
-    playerGroup.add(leftArm);
-    const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), skinMat);
-    leftHand.position.set(-0.45, 0.7, 0);
-    playerGroup.add(leftHand);
-
-    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.55, 12), hoodieMat);
-    rightArm.position.set(0.45, 1.05, 0);
-    rightArm.castShadow = true;
-    playerGroup.add(rightArm);
-    const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), skinMat);
-    rightHand.position.set(0.45, 0.7, 0);
-    playerGroup.add(rightHand);
-
-    // --- ОРУЖИЕ И КРУЖКА (В руках) ---
-    // Кофе-ган в правой руке
-    const gunGroup = new THREE.Group();
-    const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.35), gunMat);
-    gunBody.position.set(0, 0, 0.15);
-    gunGroup.add(gunBody);
-    const gunBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.2, 8), gunMat);
-    gunBarrel.rotation.x = Math.PI / 2;
-    gunBarrel.position.set(0, 0.03, 0.4);
-    gunGroup.add(gunBarrel);
-    gunGroup.position.set(0.45, 0.7, 0.1); // Привязали к правой руке
-    playerGroup.add(gunGroup);
-
-    // Кружка кофе в левой руке
-    const mugGroup = new THREE.Group();
-    const mugBody = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 12), new THREE.MeshStandardMaterial({ color: 0x222222 }));
-    mugGroup.add(mugBody);
-    const mugLabel = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.01), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    mugLabel.position.set(0, 0, 0.08);
-    mugGroup.add(mugLabel);
-    mugGroup.position.set(-0.45, 0.6, 0.05); // Привязали к левой руке
-    playerGroup.add(mugGroup);
-
-    // --- ГОЛОВА И ЛИЦО ---
-    const headGroup = new THREE.Group();
-    const skull = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), skinMat);
-    skull.scale.set(0.9, 1.1, 0.95);
-    skull.castShadow = true;
-    headGroup.add(skull);
-    
-    // Глаза (анимешные, большие)
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
-    eyeL.position.set(-0.08, 0.05, 0.19);
-    headGroup.add(eyeL);
-    const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), pupilMat);
-    pupilL.position.set(-0.08, 0.05, 0.22);
-    headGroup.add(pupilL);
-    
-    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
-    eyeR.position.set(0.08, 0.05, 0.19);
-    headGroup.add(eyeR);
-    const pupilR = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), pupilMat);
-    pupilR.position.set(0.08, 0.05, 0.22);
-    headGroup.add(pupilR);
-
-    // Рот
-    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.01, 0.01), pupilMat);
-    mouth.position.set(0, -0.1, 0.2);
-    headGroup.add(mouth);
-
-    // Волосы (торчат из-под капюшона)
-    const bangs = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.1, 0.12), hairMat);
-    bangs.position.set(0, 0.12, 0.18);
-    bangs.rotation.x = 0.2;
-    headGroup.add(bangs);
-
-    headGroup.position.set(0, 1.65, 0);
-    playerGroup.add(headGroup);
-
-    // --- КАПЮШОН ---
-    const hood = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16, 0, Math.PI * 2, 0, Math.PI / 1.5), hoodieMat);
-    hood.position.set(0, 0.05, -0.05); 
-    hood.scale.set(1.1, 1.1, 1.1);
-    headGroup.add(hood);
-
-    // --- НАУШНИКИ ПОВЕРХ КАПЮШОНА ---
-    const band = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.03, 8, 16, Math.PI), headphoneMat);
-    band.rotation.z = Math.PI;
-    band.position.set(0, 0.1, 0);
-    headGroup.add(band);
-    
-    const cupL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 12), headphoneMat);
-    cupL.rotation.z = Math.PI / 2;
-    cupL.position.set(-0.3, 0, 0);
-    headGroup.add(cupL);
-    const cupR = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 12), headphoneMat);
-    cupR.rotation.z = Math.PI / 2;
-    cupR.position.set(0.3, 0, 0);
-    headGroup.add(cupR);
-
-    // --- РЮКЗАК ---
-    const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.25), backpackMat);
-    backpack.position.set(0, 1.05, -0.35); 
-    backpack.castShadow = true;
-    playerGroup.add(backpack);
-    
-    // Труба на рюкзаке (как на арте)
-    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), hoodieMat);
-    tube.rotation.z = -0.3;
-    tube.position.set(0.15, 1.35, -0.35);
-    playerGroup.add(tube);
-
-    // Лямки рюкзака
-    const strapL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.45, 0.05), hoodieDarkMat);
-    strapL.position.set(-0.2, 1.15, 0.3);
-    playerGroup.add(strapL);
-    const strapR = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.45, 0.05), hoodieDarkMat);
-    strapR.position.set(0.2, 1.15, 0.3);
-    playerGroup.add(strapR);
-
-    // Сохраняем ссылки для анимации
-    playerGroup.userData = {
-        leftLeg: leftLeg,
-        rightLeg: rightLeg,
-        leftArm: leftArm,
-        rightArm: rightArm,
-        leftHand: leftHand,
-        rightHand: rightHand
-    };
-
-    return playerGroup;
-}
-
 /* =====================================================================
    7. СБОРКА ИГРОВОГО МИРА (УРОВНИ)
    ===================================================================== */
@@ -1303,11 +1119,38 @@ for (let i = 0; i < 2; i++) {
 /* =====================================================================
    8. ПЕРСОНАЖ
    ===================================================================== */
-// === НОВЫЙ 3D ПЕРСОНАЖ ===
-const player = create3DPlayer();
-// Ставим его на пол (Y = 0) в стартовую точку
-player.position.set(5, 0, 4);
+// ==========================================
+// ЗАГРУЗКА 3D-ПЕРСОНАЖА ИЗ VRM
+// ==========================================
+let player = new THREE.Group(); // Временная пустышка, пока грузится модель
+player.position.set(5, 0, 4); // Ставим на пол в стартовую точку
 scene.add(player);
+
+const loader = new GLTFLoader();
+// Подключаем плагин для VRM
+loader.register((parser) => new VRMLoaderPlugin(parser));
+
+// Загружаем файл (название должно совпадать с тем, что ты загрузила в папку)
+loader.load('bug_hunter.vrm', (gltf) => {
+    const vrm = gltf.userData.vrm; // Достаем VRM-данные
+    const vrmModel = vrm.scene; // Это и есть наша 3D-модель
+
+    // Настройка персонажа
+    vrmModel.castShadow = true;
+    vrmModel.receiveShadow = true;
+    
+    // В Three.js VRM-модели часто развернуты спиной к нам. 
+    // Если он будет смотреть в стену, поменяй Math.PI на 0
+    vrmModel.rotation.y = Math.PI; 
+
+    // Удаляем пустышку и ставим настоящую модель
+    scene.remove(player);
+    player = vrmModel;
+    player.position.set(5, 0, 4);
+    scene.add(player);
+    
+    console.log("Персонаж VRM успешно загружен!");
+});
 
 /* =====================================================================
    9. УПРАВЛЕНИЕ (Мышь, Тач, Клавиатура)
@@ -1516,22 +1359,6 @@ function animate() {
     updateCamera();
     updateLamps(); 
     
-    
-    // Анимация ходьбы персонажа
-    if (keys['w'] || keys['s'] || keys['a'] || keys['d'] || hasTarget) {
-        // Если персонаж движется, качаем руками и ногами
-        const walkTime = performance.now() * 0.008;
-        player.userData.leftLeg.rotation.x = Math.sin(walkTime) * 0.5;
-        player.userData.rightLeg.rotation.x = -Math.sin(walkTime) * 0.5;
-        player.userData.leftArm.rotation.x = -Math.sin(walkTime) * 0.5;
-        player.userData.rightArm.rotation.x = Math.sin(walkTime) * 0.5;
-    } else {
-        // Если стоит на месте — плавно возвращаем в исходное положение
-        player.userData.leftLeg.rotation.x *= 0.8;
-        player.userData.rightLeg.rotation.x *= 0.8;
-        player.userData.leftArm.rotation.x *= 0.8;
-        player.userData.rightArm.rotation.x *= 0.8;
-    }
     
     // --- АНИМАЦИЯ И ПОВЕДЕНИЕ ВСЕХ БАГОВ ---
     // Замедлили время в 2 раза (было 0.002, стало 0.001)
