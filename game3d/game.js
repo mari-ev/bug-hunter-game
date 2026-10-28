@@ -1388,7 +1388,7 @@ function animate() {
     updateCamera();
     updateLamps(); 
     
-
+    
     // Обновляем анимации (если они есть)
     if (mixer) {
         mixer.update(0.016); 
@@ -1397,51 +1397,33 @@ function animate() {
     // Проверяем, движется ли игрок
     const isMoving = keys['w'] || keys['s'] || keys['a'] || keys['d'] || hasTarget;
 
-    if (player && actionWalk) { // Добавили проверку на actionWalk
-        if (isMoving) {
-            // Если идем — включаем ходьбу (если она еще не играет)
-            if (!actionWalk.isRunning()) {
-                actionWalk.reset().play();
-            }
-        } else {
-            // Если стоим — останавливаем ходьбу
-            actionWalk.stop();
-        }
-    }
-    
-    // Проверяем, движется ли игрок
-    const isMoving = keys['w'] || keys['s'] || keys['a'] || keys['d'] || hasTarget;
-
     if (player) {
+        // 1. Поворачиваем персонажа в сторону движения
         if (isMoving) {
-            // Вычисляем, куда должен смотреть персонаж
             let targetAngle = player.rotation.y;
             
             if (hasTarget) {
-                // Если идем по клику — смотрим на точку клика
                 targetAngle = Math.atan2(targetPosition.x - player.position.x, targetPosition.z - player.position.z);
             } else {
-                // Если идем с клавиатуры
                 if (keys['w']) targetAngle = Math.PI; 
                 if (keys['s']) targetAngle = 0;      
                 if (keys['a']) targetAngle = Math.PI / 2; 
                 if (keys['d']) targetAngle = -Math.PI / 2; 
             }
             
-            // Плавно поворачиваем модель (используем lerp для красоты)
-            // Если модель смотрит в другую сторону, прибавь к targetAngle число Math.PI
+            // Плавный поворот
             player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, targetAngle, 0.15);
         }
-    }
 
-    // Включаем анимацию ходьбы
-    if (player && actionWalk) {
-        if (isMoving) {
-            if (!actionWalk.isRunning()) {
-                actionWalk.reset().play();
+        // 2. Включаем или выключаем анимацию ходьбы
+        if (actionWalk) {
+            if (isMoving) {
+                if (!actionWalk.isRunning()) {
+                    actionWalk.reset().play();
+                }
+            } else {
+                actionWalk.stop();
             }
-        } else {
-            actionWalk.stop();
         }
     }
     
